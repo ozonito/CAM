@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Flashcards de Derecho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background-color: #1f2937; /* bg-gray-800 */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            text-align: left;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #4b5563; /* border-gray-600 */
+            background-color: #374151; /* bg-gray-700 */
+        }
+        .btn:hover {
+            background-color: #4b5563; /* bg-gray-600 */
+            transform: translateY(-2px);
+        }
+        .btn-correct {
+            background-color: #10b981 !important; /* bg-emerald-500 */
+            color: white;
+            border-color: #059669 !important;
+        }
+        .btn-incorrect {
+            background-color: #ef4444 !important; /* bg-red-500 */
+            color: white;
+            border-color: #dc2626 !important;
+        }
+        .feedback-popup {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            color: white;
+            font-weight: 600;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .feedback-popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="w-full max-w-2xl mx-auto">
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="card text-center">
+            <h1 class="text-3xl font-bold mb-2 text-white">Quiz de Oposiciones</h1>
+            <p class="text-gray-400 mb-6">Configura tu sesión de estudio</p>
+            
+            <div class="mb-4 text-left">
+                <label for="topic" class="block mb-2 font-medium text-gray-300">Bloque Temático:</label>
+                <select id="topic" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="todo">TODO</option>
+                    <option value="administrativo">Derecho Administrativo</option>
+                    <option value="civil">Derecho Civil</option>
+                    <option value="mercantil">Derecho Mercantil</option>
+                </select>
+            </div>
+
+            <div class="mb-6 text-left">
+                <label for="num-questions" class="block mb-2 font-medium text-gray-300">Número de Preguntas:</label>
+                <select id="num-questions" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+
+            <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 text-lg">
+                Comenzar
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span id="progress" class="text-lg font-semibold text-gray-400"></span>
+                <span id="score-display" class="text-lg font-semibold text-gray-400">✅ 0 ❌ 0</span>
+            </div>
+            <div id="quiz-card" class="card">
+                <p id="question" class="text-xl font-medium mb-6 leading-relaxed text-white"></p>
+                <div id="options" class="space-y-3">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+             <p id="motivational-phrase" class="text-center mt-4 text-gray-500 italic"></p>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden card text-center">
+            <h2 class="text-3xl font-bold mb-4 text-white">Resultados Finales</h2>
+            <div id="results-summary" class="text-xl mb-6"></div>
+            <div id="review-section" class="text-left mb-6">
+                <h3 class="text-2xl font-semibold mb-3 text-white">Conceptos a Repasar:</h3>
+                <ul id="review-list" class="list-disc pl-5 space-y-3 text-gray-300">
+                    <!-- Incorrect answers will be listed here -->
+                </ul>
+            </div>
+             <p id="final-message" class="text-lg text-gray-400 mb-6"></p>
+            <button id="restart-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                Volver a Jugar
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback Popup -->
+    <div id="feedback-popup" class="feedback-popup">
+        <span id="feedback-text"></span>
+        <a id="feedback-link" href="#" target="_blank" class="underline ml-2 hover:text-blue-300">Consultar Ley</a>
+    </div>
+
+<script>
+// --- DATABASE ---
+// Se han actualizado los enlaces para apuntar a los artículos específicos en el BOE.
+const flashcardsDB = [
+    // --- DERECHO ADMINISTRATIVO ---
+    {
+        topic: "administrativo",
+        question: "¿Qué son los Decretos-leyes según el artículo 86 de la Constitución Española?",
+        correctAnswer: "Disposiciones normativas con rango de ley que el Gobierno puede dictar en casos de extraordinaria y urgente necesidad.",
+        distractors: [
+            "Leyes orgánicas aprobadas por el Congreso.",
+            "Reglamentos del poder ejecutivo sin rango de ley.",
+            "Leyes ordinarias que no requieren urgencia."
+        ],
+        legalReferenceText: "Art. 86 CE",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a86"
+    },
+    {
+        topic: "administrativo",
+        question: "Según el artículo 94.1 CE, ¿qué tipo de Tratados requieren la previa autorización de las Cortes Generales?",
+        correctAnswer: "Tratados de carácter político, militar, que afecten a la integridad territorial o a los derechos fundamentales del Título I.",
+        distractors: [
+            "Todos los tratados internacionales sin excepción.",
+            "Únicamente los tratados de carácter económico.",
+            "Solo los tratados que no impliquen obligaciones financieras."
+        ],
+        legalReferenceText: "Art. 94.1 CE",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a94"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué significa la inderogabilidad singular de los reglamentos?",
+        correctAnswer: "Un órgano administrativo no puede dejar de aplicar un reglamento para un caso concreto mediante una decisión particular.",
+        distractors: [
+            "Los reglamentos no pueden ser derogados por ninguna ley.",
+            "Cualquier reglamento puede ser derogado por una resolución administrativa.",
+            "Los ciudadanos pueden solicitar no aplicar un reglamento si les perjudica."
+        ],
+        legalReferenceText: "Art. 37.1 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a37"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué es la avocación según el artículo 10 de la LRJSP?",
+        correctAnswer: "Un órgano superior atrae para sí el conocimiento de un asunto cuya resolución corresponde a un órgano inferior jerárquico.",
+        distractors: [
+            "La transferencia de la titularidad de la competencia a otro órgano.",
+            "La delegación de la firma en un órgano inferior.",
+            "La asignación de tareas materiales a otro órgano por eficacia."
+        ],
+        legalReferenceText: "Art. 10 LRJSP",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a10"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Cuál es una diferencia clave entre un Organismo Autónomo y una Entidad Pública Empresarial?",
+        correctAnswer: "Los Organismos Autónomos se rigen principalmente por derecho público, mientras que las Entidades Públicas Empresariales se rigen en gran medida por derecho privado.",
+        distractors: [
+            "Los Organismos Autónomos tienen ánimo de lucro y las Entidades Públicas no.",
+            "Solo las Entidades Públicas Empresariales tienen personalidad jurídica propia.",
+            "Los Organismos Autónomos no pueden prestar servicios, solo realizar investigación."
+        ],
+        legalReferenceText: "Arts. 88 y 103 LRJSP",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a88"
+    },
+    {
+        topic: "administrativo",
+        question: "Según el artículo 14.2 de la LPAC, ¿quiénes están obligados a relacionarse electrónicamente con las AAPP?",
+        correctAnswer: "Las personas jurídicas, quienes ejerzan una actividad profesional con colegiación obligatoria y quienes les representen.",
+        distractors: [
+            "Todas las personas físicas sin excepción.",
+            "Únicamente las grandes empresas con más de 50 empleados.",
+            "Solo las personas que voluntariamente elijan ese medio."
+        ],
+        legalReferenceText: "Art. 14.2 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a14"
+    },
+     {
+        topic: "administrativo",
+        question: "¿Qué efecto general tiene el silencio administrativo en procedimientos iniciados a solicitud del interesado?",
+        correctAnswer: "Estimatorio (positivo), salvo que una norma con rango de Ley o de Derecho de la UE establezca lo contrario.",
+        distractors: [
+            "Siempre desestimatorio (negativo).",
+            "Siempre produce la caducidad del procedimiento.",
+            "Depende de la decisión posterior del órgano administrativo."
+        ],
+        legalReferenceText: "Art. 24 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a24"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué es un acto nulo de pleno derecho según el artículo 47 de la LPAC?",
+        correctAnswer: "Un acto que lesiona derechos fundamentales, dictado por órgano manifiestamente incompetente o con contenido imposible, entre otros.",
+        distractors: [
+            "Un acto que contiene un simple error material que puede ser corregido.",
+            "Cualquier acto que sea desfavorable para el ciudadano.",
+            "Un acto que no ha sido notificado en el plazo de 10 días."
+        ],
+        legalReferenceText: "Art. 47 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a47"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué plazo general establece la LPAC para el cómputo de plazos por días?",
+        correctAnswer: "Se entienden que son días hábiles, excluyendo sábados, domingos y festivos.",
+        distractors: [
+            "Siempre son días naturales, incluyendo festivos.",
+            "Son días hábiles, excluyendo únicamente los domingos.",
+            "Son 15 días naturales si la ley no dice nada."
+        ],
+        legalReferenceText: "Art. 30 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a30"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué es la caducidad en un procedimiento iniciado a instancia de parte?",
+        correctAnswer: "La finalización del procedimiento por inactividad del interesado durante los plazos establecidos, previa advertencia de la Administración.",
+        distractors: [
+            "La anulación del procedimiento por parte de la Administración por falta de pruebas.",
+            "El desistimiento voluntario del interesado.",
+            "La prescripción de la acción para iniciar el procedimiento."
+        ],
+        legalReferenceText: "Art. 95 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a95"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Contra qué actos procede el Recurso de Alzada?",
+        correctAnswer: "Contra resoluciones y actos de trámite que no pongan fin a la vía administrativa.",
+        distractors: [
+            "Contra actos que pongan fin a la vía administrativa.",
+            "Contra disposiciones administrativas de carácter general (reglamentos).",
+            "Únicamente contra sentencias judiciales firmes."
+        ],
+        legalReferenceText: "Art. 121 LPAC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a121"
+    },
+    {
+        topic: "administrativo",
+        question: "Según la LCSP, ¿qué es el 'valor estimado' de un contrato?",
+        correctAnswer: "La cuantía total de las prestaciones, incluyendo prórrogas y opciones, IVA excluido, para determinar el procedimiento de adjudicación.",
+        distractors: [
+            "El precio final que se paga al adjudicatario con IVA incluido.",
+            "La oferta económica más baja presentada en la licitación.",
+            "El presupuesto máximo que la Administración puede gastar."
+        ],
+        legalReferenceText: "Art. 101 LCSP",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a101"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué principio rige la responsabilidad patrimonial de la Administración según el art. 106.2 CE?",
+        correctAnswer: "Los particulares serán indemnizados por toda lesión en sus bienes y derechos, salvo fuerza mayor, derivada del funcionamiento normal o anormal de los servicios públicos.",
+        distractors: [
+            "La Administración solo responde si actúa con dolo o culpa grave.",
+            "La Administración nunca responde por el funcionamiento normal de sus servicios.",
+            "Los particulares deben demostrar siempre que la Administración cometió una ilegalidad."
+        ],
+        legalReferenceText: "Art. 106.2 CE",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a106"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Qué es un bien de dominio público o demanial?",
+        correctAnswer: "Aquel que, siendo de titularidad pública, está afectado al uso general o al servicio público.",
+        distractors: [
+            "Cualquier bien propiedad de una Administración Pública.",
+            "Los bienes que la Administración puede vender libremente en el mercado.",
+            "Los bienes embargados por la Hacienda Pública."
+        ],
+        legalReferenceText: "Art. 5 Ley 33/2003",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2003-20254#a5"
+    },
+    {
+        topic: "administrativo",
+        question: "¿Cuál es una de las causas de pérdida de la condición de funcionario de carrera según el EBEP?",
+        correctAnswer: "La renuncia, la pérdida de la nacionalidad, la jubilación, la sanción disciplinaria de separación del servicio o la pena de inhabilitación absoluta.",
+        distractors: [
+            "Solicitar una excedencia voluntaria por interés particular.",
+            "Obtener una mala calificación en la evaluación de desempeño.",
+            "Cambiar de destino a otra Administración Pública."
+        ],
+        legalReferenceText: "Art. 63 TREBEP",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11719#a63"
+    },
+    
+    // --- DERECHO CIVIL ---
+    {
+        topic: "civil",
+        question: "¿Cuáles son las fuentes del derecho según el artículo 1.1 del Código Civil?",
+        correctAnswer: "La ley, la costumbre y los principios generales del derecho.",
+        distractors: [
+            "Solo la ley y la jurisprudencia.",
+            "La ley, los decretos y las órdenes ministeriales.",
+            "La Constitución, la ley y los tratados internacionales."
+        ],
+        legalReferenceText: "Art. 1.1 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1"
+    },
+    {
+        topic: "civil",
+        question: "¿Cuándo se adquiere la personalidad civil según el Código Civil?",
+        correctAnswer: "Con el nacimiento, una vez producido el entero desprendimiento del seno materno.",
+        distractors: [
+            "En el momento de la concepción.",
+            "Al cumplir la mayoría de edad.",
+            "Al ser inscrito en el Registro Civil."
+        ],
+        legalReferenceText: "Art. 30 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art30"
+    },
+    {
+        topic: "civil",
+        question: "En el régimen de sociedad de gananciales, ¿qué carácter tienen los frutos o rentas de los bienes privativos?",
+        correctAnswer: "Son bienes gananciales.",
+        distractors: [
+            "Son siempre bienes privativos.",
+            "Se dividen por la mitad entre privativos y gananciales.",
+            "Pertenecen al cónyuge que sea titular del bien privativo."
+        ],
+        legalReferenceText: "Art. 1347 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1347"
+    },
+    {
+        topic: "civil",
+        question: "Diferencia entre prescripción y caducidad.",
+        correctAnswer: "La prescripción extingue la acción pero no el derecho y puede interrumpirse, mientras que la caducidad extingue el derecho y no se puede interrumpir.",
+        distractors: [
+            "No hay ninguna diferencia, son términos sinónimos.",
+            "La prescripción solo se aplica a derechos reales y la caducidad a derechos personales.",
+            "La caducidad puede ser interrumpida por reclamación judicial, pero la prescripción no."
+        ],
+        legalReferenceText: "Arts. 1961 y ss. CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1961"
+    },
+    {
+        topic: "civil",
+        question: "¿Qué es un derecho real de hipoteca?",
+        correctAnswer: "Un derecho de garantía que recae sobre un bien inmueble para asegurar el cumplimiento de una obligación, sin desplazamiento de la posesión.",
+        distractors: [
+            "Un derecho a usar y disfrutar un bien ajeno.",
+            "Un contrato de alquiler con opción a compra.",
+            "Un derecho de garantía sobre un bien mueble con entrega de la posesión."
+        ],
+        legalReferenceText: "Art. 1876 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1876"
+    },
+    {
+        topic: "civil",
+        question: "Para que una donación de un bien inmueble sea válida, ¿qué requisito de forma exige el Código Civil?",
+        correctAnswer: "Debe hacerse en escritura pública.",
+        distractors: [
+            "Es suficiente un contrato privado.",
+            "Puede hacerse verbalmente si hay testigos.",
+            "Requiere inscripción obligatoria en el Registro de la Propiedad para ser válida."
+        ],
+        legalReferenceText: "Art. 633 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art633"
+    },
+    {
+        topic: "civil",
+        question: "Según el CC, la posesión de un bien inmueble presume la posesión de...",
+        correctAnswer: "Los bienes muebles que se hallen dentro de él, mientras no conste o se acredite que deben ser excluidos.",
+        distractors: [
+            "Únicamente el suelo, no lo que hay en su interior.",
+            "Otros inmuebles colindantes.",
+            "Los derechos de autor sobre las obras creadas en él."
+        ],
+        legalReferenceText: "Art. 449 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art449"
+    },
+    {
+        topic: "civil",
+        question: "¿Qué es el principio de fe pública registral?",
+        correctAnswer: "Protege al tercero que adquiere de buena fe y a título oneroso un derecho de quien aparece con facultades para transmitirlo en el Registro de la Propiedad.",
+        distractors: [
+            "Obliga a que todos los documentos privados se eleven a públicos.",
+            "Significa que todo lo que dice un notario es cierto sin prueba en contrario.",
+            "Presume que todos los bienes inmuebles están inscritos en el Registro."
+        ],
+        legalReferenceText: "Art. 34 Ley Hipotecaria",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1946-2453#a34"
+    },
+    {
+        topic: "civil",
+        question: "¿Cuál es la principal diferencia entre las obligaciones mancomunadas y las solidarias?",
+        correctAnswer: "En las mancomunadas cada deudor debe solo su parte, en las solidarias cualquiera puede ser reclamado por el total.",
+        distractors: [
+            "Las mancomunadas solo aplican a deudas de dinero y las solidarias a obligaciones de hacer.",
+            "Las solidarias requieren pacto expreso, las mancomunadas son la regla general.",
+            "Las mancomunadas no admiten varios acreedores, las solidarias sí."
+        ],
+        legalReferenceText: "Art. 1137 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1137"
+    },
+    {
+        topic: "civil",
+        question: "Causa de nulidad de un contrato",
+        correctAnswer: "La falta de uno de sus elementos esenciales: consentimiento, objeto o causa.",
+        distractors: [
+            "Que una de las partes se arrepienta después de firmar.",
+            "El incumplimiento de una de las cláusulas.",
+            "Que el contrato sea perjudicial para una de las partes (lesión)."
+        ],
+        legalReferenceText: "Art. 1261 CC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1261"
+    },
+    
+    // --- DERECHO MERCANTIL ---
+    {
+        topic: "mercantil",
+        question: "¿Cuáles son las fuentes del Derecho Mercantil según el Código de Comercio?",
+        correctAnswer: "El Código de Comercio, los usos del comercio y, en su defecto, el Derecho común (civil).",
+        distractors: [
+            "Únicamente el Código de Comercio.",
+            "La ley mercantil, la costumbre civil y los principios generales del derecho.",
+            "Los tratados internacionales y la jurisprudencia del Tribunal Supremo."
+        ],
+        legalReferenceText: "Art. 2 CCo",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a2"
+    },
+    {
+        topic: "mercantil",
+        question: "¿Quiénes son considerados comerciantes para el Código de Comercio?",
+        correctAnswer: "Los que, teniendo capacidad legal para ejercer el comercio, se dedican a él habitualmente, y las compañías mercantiles o industriales.",
+        distractors: [
+            "Cualquier persona que realice una compra para revender.",
+            "Solo las personas jurídicas inscritas en el Registro Mercantil.",
+            "Los artesanos y agricultores."
+        ],
+        legalReferenceText: "Art. 1 CCo",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a1"
+    },
+    {
+        topic: "mercantil",
+        question: "Diferencia principal entre marca y nombre comercial.",
+        correctAnswer: "La marca distingue productos o servicios en el mercado, mientras que el nombre comercial identifica a una empresa en el tráfico mercantil.",
+        distractors: [
+            "La marca se registra en la OEPM y el nombre comercial no.",
+            "El nombre comercial tiene protección internacional automática y la marca no.",
+            "Son sinónimos y se pueden usar indistintamente."
+        ],
+        legalReferenceText: "Ley 17/2001 de Marcas",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2001-23093"
+    },
+    {
+        topic: "mercantil",
+        question: "¿Qué libros contables son obligatorios para todo empresario según el Código de Comercio?",
+        correctAnswer: "Un libro de Inventarios y Cuentas Anuales y otro Diario.",
+        distractors: [
+            "Solo el libro de facturas emitidas y recibidas.",
+            "El libro de actas, el libro de socios y el libro diario.",
+            "Ninguno es obligatorio, solo recomendable."
+        ],
+        legalReferenceText: "Art. 25 CCo",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a25"
+    },
+    {
+        topic: "mercantil",
+        question: "Diferencia fundamental en la responsabilidad de los socios en una Sociedad Colectiva y una Sociedad de Responsabilidad Limitada.",
+        correctAnswer: "En la Colectiva los socios responden de forma personal, ilimitada y solidaria; en la Limitada, la responsabilidad se limita al capital aportado.",
+        distractors: [
+            "En la Limitada todos los socios son administradores, en la Colectiva no.",
+            "La Colectiva no requiere capital mínimo, la Limitada sí.",
+            "En la Colectiva los socios no pueden trabajar en la empresa, en la Limitada sí."
+        ],
+        legalReferenceText: "Art. 127 CCo y TRLSC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a127"
+    },
+    {
+        topic: "mercantil",
+        question: "¿Cuál es el capital social mínimo para constituir una Sociedad Anónima (SA)?",
+        correctAnswer: "60.000 euros.",
+        distractors: [
+            "3.000 euros.",
+            "No hay capital mínimo.",
+            "120.000 euros."
+        ],
+        legalReferenceText: "Art. 4 TRLSC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-10544#a4"
+    },
+    {
+        topic: "mercantil",
+        question: "En una Sociedad Anónima (SA), ¿a quién corresponde la competencia para modificar los estatutos sociales?",
+        correctAnswer: "A la Junta General de Accionistas.",
+        distractors: [
+            "Al Consejo de Administración.",
+            "Al administrador único.",
+            "Al Registrador Mercantil."
+        ],
+        legalReferenceText: "Art. 160 TRLSC",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-10544#a160"
+    },
+    {
+        topic: "mercantil",
+        question: "Requisito esencial que debe contener una letra de cambio para ser válida.",
+        correctAnswer: "La denominación 'letra de cambio' inserta en el propio texto del título.",
+        distractors: [
+            "El NIF del librado.",
+            "La firma de dos testigos.",
+            "Estar emitida en papel timbrado oficial."
+        ],
+        legalReferenceText: "Art. 1 Ley Cambiaria",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1985-15264#a1"
+    },
+    {
+        topic: "mercantil",
+        question: "En el contrato de compraventa mercantil, ¿cuándo se transfiere el riesgo de pérdida de la cosa al comprador?",
+        correctAnswer: "Generalmente, desde la puesta a disposición de la mercancía, incluso antes de la entrega física.",
+        distractors: [
+            "Solo en el momento de la entrega física de la mercancía.",
+            "Desde el momento en que se firma el contrato.",
+            "Nunca se transfiere el riesgo, siempre es del vendedor."
+        ],
+        legalReferenceText: "Art. 333 CCo",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a333"
+    },
+    {
+        topic: "mercantil",
+        question: "¿Qué es el concurso de acreedores?",
+        correctAnswer: "Un procedimiento judicial que se inicia cuando una persona o empresa se encuentra en estado de insolvencia y no puede cumplir regularmente sus obligaciones.",
+        distractors: [
+            "Un acuerdo privado entre un deudor y sus acreedores para aplazar pagos.",
+            "Una subasta pública de los bienes de una empresa.",
+            "Un tipo de sociedad mercantil para situaciones de crisis."
+        ],
+        legalReferenceText: "TR Ley Concursal",
+        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2020-4859"
+    }
+];
+
+// --- APPLICATION LOGIC ---
+const setupScreen = document.getElementById('setup-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultsScreen = document.getElementById('results-screen');
+
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const topicSelect = document.getElementById('topic');
+const numQuestionsSelect = document.getElementById('num-questions');
+
+const questionEl = document.getElementById('question');
+const optionsEl = document.getElementById('options');
+const progressEl = document.getElementById('progress');
+const scoreDisplayEl = document.getElementById('score-display');
+const motivationalPhraseEl = document.getElementById('motivational-phrase');
+
+const resultsSummaryEl = document.getElementById('results-summary');
+const reviewListEl = document.getElementById('review-list');
+const finalMessageEl = document.getElementById('final-message');
+
+const feedbackPopup = document.getElementById('feedback-popup');
+const feedbackText = document.getElementById('feedback-text');
+const feedbackLink = document.getElementById('feedback-link');
+
+let currentQuiz = [];
+let currentQuestionIndex = 0;
+let score = { correct: 0, incorrect: 0 };
+let incorrectAnswers = [];
+
+const motivationalPhrases = [
+    "Cada pregunta es un paso más hacia tu meta. ¡Sigue así!",
+    "La constancia es la clave del éxito. ¡No te rindas!",
+    "El esfuerzo de hoy es la recompensa de mañana.",
+    "Estás construyendo un futuro brillante. ¡Ánimo!",
+    "Confía en tu preparación. ¡Puedes con esto!"
+];
+
+const finalMessages = {
+    good: "¡Excelente trabajo! Tu dedicación está dando frutos. Sigue repasando y consolidando tus conocimientos.",
+    medium: "¡Buen esfuerzo! Vas por el buen camino. Concéntrate en las áreas de repaso y verás cómo mejoras.",
+    bad: "¡No te desanimes! Cada intento es una oportunidad de aprendizaje. Revisa los conceptos y vuelve a intentarlo con más fuerza."
+};
+
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function startGame() {
+    const selectedTopic = topicSelect.value;
+    const numQuestions = parseInt(numQuestionsSelect.value, 10);
+
+    let filteredFlashcards = flashcardsDB;
+    if (selectedTopic !== 'todo') {
+        filteredFlashcards = flashcardsDB.filter(card => card.topic === selectedTopic);
+    }
+
+    currentQuiz = shuffleArray([...filteredFlashcards]).slice(0, numQuestions);
+    currentQuestionIndex = 0;
+    score = { correct: 0, incorrect: 0 };
+    incorrectAnswers = [];
+
+    updateScoreDisplay();
+    setupScreen.classList.add('hidden');
+    resultsScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    
+    displayQuestion();
+}
+
+function displayQuestion() {
+    if (currentQuestionIndex >= currentQuiz.length) {
+        showResults();
+        return;
+    }
+
+    const card = currentQuiz[currentQuestionIndex];
+    progressEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${currentQuiz.length}`;
+    questionEl.innerHTML = card.question; // Use innerHTML to render potential formatting
+
+    optionsEl.innerHTML = '';
+    const options = shuffleArray([card.correctAnswer, ...card.distractors]);
+    
+    options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'btn text-white';
+        button.innerHTML = option;
+        button.addEventListener('click', () => checkAnswer(option, card, button));
+        optionsEl.appendChild(button);
+    });
+    
+    motivationalPhraseEl.textContent = motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)];
+}
+
+function checkAnswer(selectedOption, card, button) {
+    // Disable all buttons after an answer is selected
+    const buttons = optionsEl.querySelectorAll('button');
+    buttons.forEach(btn => btn.disabled = true);
+
+    const isCorrect = selectedOption === card.correctAnswer;
+    
+    if (isCorrect) {
+        score.correct++;
+        button.classList.add('btn-correct');
+        showFeedbackPopup(true, card);
+    } else {
+        score.incorrect++;
+        button.classList.add('btn-incorrect');
+        incorrectAnswers.push(card);
+        // Highlight the correct answer
+        buttons.forEach(btn => {
+            if (btn.innerHTML === card.correctAnswer) {
+                btn.classList.add('btn-correct');
+            }
+        });
+        showFeedbackPopup(false, card);
+    }
+
+    updateScoreDisplay();
+    
+    setTimeout(() => {
+        currentQuestionIndex++;
+        displayQuestion();
+    }, 2500); // Wait 2.5 seconds before next question
+}
+
+function showFeedbackPopup(isCorrect, card) {
+    if (isCorrect) {
+        feedbackText.innerHTML = '¡Correcto! 🎉';
+        feedbackPopup.style.backgroundColor = '#10b981'; // emerald-500
+    } else {
+        feedbackText.innerHTML = 'Incorrecto. La respuesta es: ' + card.correctAnswer + ' 💪';
+        feedbackPopup.style.backgroundColor = '#ef4444'; // red-500
+    }
+    
+    feedbackLink.href = card.legalReferenceLink;
+    feedbackLink.textContent = `Consultar ${card.legalReferenceText}`;
+
+    feedbackPopup.classList.add('show');
+    
+    setTimeout(() => {
+        feedbackPopup.classList.remove('show');
+    }, 2400);
+}
+
+function updateScoreDisplay() {
+    scoreDisplayEl.innerHTML = `✅ ${score.correct} <span class="mx-2">|</span> ❌ ${score.incorrect}`;
+}
+
+function showResults() {
+    quizScreen.classList.add('hidden');
+    resultsScreen.classList.remove('hidden');
+
+    const total = currentQuiz.length;
+    const correct = score.correct;
+    const percentage = total > 0 ? ((correct / total) * 100).toFixed(0) : 0;
+
+    resultsSummaryEl.innerHTML = `Has acertado <span class="font-bold text-green-400">${correct}</span> de <span class="font-bold">${total}</span> preguntas. (${percentage}%)`;
+
+    reviewListEl.innerHTML = '';
+    if (incorrectAnswers.length > 0) {
+        incorrectAnswers.forEach(card => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="font-semibold">${card.question}</span><br><span class="text-sm text-gray-400">Respuesta correcta: ${card.correctAnswer}</span>`;
+            reviewListEl.appendChild(li);
+        });
+    } else {
+        reviewListEl.innerHTML = '<p>¡Felicidades! No has cometido ningún error. 🎉</p>';
+    }
+
+    if (percentage >= 80) {
+        finalMessageEl.textContent = finalMessages.good;
+    } else if (percentage >= 50) {
+        finalMessageEl.textContent = finalMessages.medium;
+    } else {
+        finalMessageEl.textContent = finalMessages.bad;
+    }
+}
+
+function restartGame() {
+    resultsScreen.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+}
+
+// Event Listeners
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', restartGame);
+
+</script>
+</body>
+</html>
