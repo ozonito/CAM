@@ -95,7 +95,10 @@
             </div>
 
             <div class="mb-6 text-left">
-                <label for="num-questions" class="block mb-2 font-medium text-gray-300">Número de Preguntas:</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="num-questions" class="font-medium text-gray-300">Número de Preguntas:</label>
+                    <span id="available-questions-info" class="text-sm text-gray-400"></span>
+                </div>
                 <input type="number" id="num-questions" value="10" min="1" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
@@ -608,6 +611,8 @@ const flashcardsDB = [
 ];
 
 // --- APPLICATION LOGIC ---
+const STORAGE_KEY = 'flashcardQuizAskedQuestions';
+
 const setupScreen = document.getElementById('setup-screen');
 const quizScreen = document.getElementById('quiz-screen');
 const resultsScreen = document.getElementById('results-screen');
@@ -616,6 +621,7 @@ const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const topicSelect = document.getElementById('topic');
 const numQuestionsEl = document.getElementById('num-questions');
+const availableQuestionsInfoEl = document.getElementById('available-questions-info');
 
 const questionEl = document.getElementById('question');
 const optionsEl = document.getElementById('options');
@@ -650,6 +656,22 @@ const finalMessages = {
     bad: "¡No te desanimes! Cada intento es una oportunidad de aprendizaje. Revisa los conceptos y vuelve a intentarlo con más fuerza."
 };
 
+// --- Persistence Logic ---
+function getAskedQuestions() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const defaultStructure = { administrativo: [], civil: [], mercantil: [] };
+    if (stored) {
+        // Ensure the stored object has the correct keys
+        const parsed = JSON.parse(stored);
+        return { ...defaultStructure, ...parsed };
+    }
+    return defaultStructure;
+}
+
+function saveAskedQuestions(asked) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(asked));
+}
+
 
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -663,22 +685,67 @@ function startGame() {
     const selectedTopic = topicSelect.value;
     let numQuestions = parseInt(numQuestionsEl.value, 10);
 
-    let filteredFlashcards = flashcardsDB;
-    if (selectedTopic !== 'todo') {
-        filteredFlashcards = flashcardsDB.filter(card => card.topic === selectedTopic);
-    }
+    let askedQuestions = getAskedQuestions();
     
+    // 1. Get all cards for the topic, with original index
+    const allCardsWithIndex = flashcardsDB.map((card, index) => ({ ...card, originalIndex: index }));
+    let topicPool = allCardsWithIndex;
+    if (selectedTopic !== 'todo') {
+        topicPool = allCardsWithIndex.filter(card => card.topic === selectedTopic);
+    }
+
+    // 2. Determine unasked questions
+    let askedIndicesForTopic;
+    if (selectedTopic === 'todo') {
+        askedIndicesForTopic = new Set([...askedQuestions.administrativo, ...askedQuestions.civil, ...askedQuestions.mercantil]);
+    } else {
+        askedIndicesForTopic = new Set(askedQuestions[selectedTopic] || []);
+    }
+
+    let unaskedPool = topicPool.filter(card => !askedIndicesForTopic.has(card.originalIndex));
+
+    // 3. If no unasked questions, reset the pool for that topic
+    if (unaskedPool.length === 0 && topicPool.length > 0) {
+        if (selectedTopic === 'todo') {
+             askedQuestions = { administrativo: [], civil: [], mercantil: [] };
+        } else {
+             askedQuestions[selectedTopic] = [];
+        }
+        unaskedPool = topicPool; // Use the full pool again
+    }
+
+    // 4. Validate number of questions against available pool
     if (isNaN(numQuestions) || numQuestions < 1) {
         numQuestions = 1;
-        numQuestionsEl.value = 1;
     }
-    if (numQuestions > filteredFlashcards.length) {
-        numQuestions = filteredFlashcards.length;
-        numQuestionsEl.value = numQuestions;
+    if (numQuestions > unaskedPool.length) {
+        numQuestions = unaskedPool.length;
     }
+    numQuestionsEl.value = numQuestions;
+    
+    // 5. Create the quiz and update tracking
+    currentQuiz = shuffleArray([...unaskedPool]).slice(0, numQuestions);
+    
+    const newAskedIndices = currentQuiz.map(card => card.originalIndex);
+    if (selectedTopic === 'todo') {
+        newAskedIndices.forEach(index => {
+            const topicOfCard = flashcardsDB[index].topic;
+            if (!askedQuestions[topicOfCard].includes(index)) {
+                askedQuestions[topicOfCard].push(index);
+            }
+        });
+    } else {
+        // Add only new indices to avoid duplicates
+        newAskedIndices.forEach(index => {
+            if (!askedQuestions[selectedTopic].includes(index)) {
+                 askedQuestions[selectedTopic].push(index);
+            }
+        });
+    }
+    saveAskedQuestions(askedQuestions);
 
 
-    currentQuiz = shuffleArray([...filteredFlashcards]).slice(0, numQuestions);
+    // 6. Start the game UI
     currentQuestionIndex = 0;
     score = { correct: 0, incorrect: 0 };
     incorrectAnswers = [];
@@ -742,7 +809,7 @@ function checkAnswer(selectedOption, card, button) {
     setTimeout(() => {
         currentQuestionIndex++;
         displayQuestion();
-    }, 4000); // Increased timeout for reading the explanation
+    }, 4500); // Increased timeout for reading the explanation
 }
 
 function showFeedbackPopup(isCorrect, card) {
@@ -750,7 +817,7 @@ function showFeedbackPopup(isCorrect, card) {
         feedbackText.innerHTML = '¡Correcto! 🎉';
         feedbackPopup.style.backgroundColor = '#10b981';
     } else {
-        feedbackText.innerHTML = `Incorrecto. 💪<br><strong class="font-normal">La respuesta correcta es:</strong><br><span class="font-normal text-base">${card.correctAnswer}</span><br><em class="text-sm font-normal text-gray-300">${card.explanation}</em>`;
+        feedbackText.innerHTML = `Incorrecto. 💪<br><strong class="font-normal">La respuesta correcta es:</strong><br><span class="font-normal text-base">${card.correctAnswer}</span><br><em class="text-sm font-normal text-gray-300">${card.explanation || ''}</em>`;
         feedbackPopup.style.backgroundColor = '#ef4444';
     }
     
@@ -761,7 +828,7 @@ function showFeedbackPopup(isCorrect, card) {
     
     setTimeout(() => {
         feedbackPopup.classList.remove('show');
-    }, 3900); // Slightly less than the question timer
+    }, 4400); // Slightly less than the question timer
 }
 
 function updateScoreDisplay() {
@@ -788,7 +855,10 @@ function showResults() {
         });
     } else {
         reviewListEl.parentElement.style.display = 'none';
-        reviewListEl.innerHTML = '<p>¡Felicidades! No has cometido ningún error. 🎉</p>';
+        reviewListEl.innerHTML = '';
+        const p = document.createElement('p');
+        p.textContent = '¡Felicidades! No has cometido ningún error. 🎉';
+        reviewListEl.appendChild(p);
     }
 
     if (percentage >= 80) {
@@ -803,27 +873,44 @@ function showResults() {
 function restartGame() {
     resultsScreen.classList.add('hidden');
     setupScreen.classList.remove('hidden');
+    updateAvailableQuestions();
 }
 
-function updateMaxQuestions() {
+function updateAvailableQuestions() {
     const selectedTopic = topicSelect.value;
-    let maxQuestions = flashcardsDB.length;
-    if (selectedTopic !== 'todo') {
-        maxQuestions = flashcardsDB.filter(card => card.topic === selectedTopic).length;
+    const askedQuestions = getAskedQuestions();
+
+    const allCardsForTopic = flashcardsDB.filter(card => selectedTopic === 'todo' || card.topic === selectedTopic);
+    
+    let askedIndicesForTopic;
+    if (selectedTopic === 'todo') {
+        askedIndicesForTopic = new Set([...askedQuestions.administrativo, ...askedQuestions.civil, ...askedQuestions.mercantil]);
+    } else {
+        askedIndicesForTopic = new Set(askedQuestions[selectedTopic] || []);
     }
-    numQuestionsEl.max = maxQuestions;
-    if (parseInt(numQuestionsEl.value) > maxQuestions) {
-        numQuestionsEl.value = maxQuestions;
+    
+    const unaskedCount = allCardsForTopic.filter((card, index) => {
+        // Find the original index of the card to check against asked list
+        const originalIndex = flashcardsDB.findIndex(dbCard => dbCard.question === card.question);
+        return !askedIndicesForTopic.has(originalIndex);
+    }).length;
+
+    if(unaskedCount > 0){
+        availableQuestionsInfoEl.textContent = `(${unaskedCount} nuevas disponibles)`;
+        numQuestionsEl.max = unaskedCount;
+    } else {
+        availableQuestionsInfoEl.textContent = `(Ciclo completado. ¡Repasando!)`;
+        numQuestionsEl.max = allCardsForTopic.length;
     }
 }
 
 // Event Listeners
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', restartGame);
-topicSelect.addEventListener('change', updateMaxQuestions);
+topicSelect.addEventListener('change', updateAvailableQuestions);
 
 // Initial setup
-updateMaxQuestions();
+document.addEventListener('DOMContentLoaded', updateAvailableQuestions);
 
 </script>
 </body>
