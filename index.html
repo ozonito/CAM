@@ -57,10 +57,22 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
         }
         .feedback-popup.show {
             opacity: 1;
             visibility: visible;
+        }
+        /* Ocultar las flechas del input numérico */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
         }
     </style>
 </head>
@@ -84,12 +96,7 @@
 
             <div class="mb-6 text-left">
                 <label for="num-questions" class="block mb-2 font-medium text-gray-300">Número de Preguntas:</label>
-                <select id="num-questions" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="30">30</option>
-                    <option value="50">50</option>
-                </select>
+                <input type="number" id="num-questions" value="10" min="1" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 text-lg">
@@ -131,19 +138,19 @@
 
     <!-- Feedback Popup -->
     <div id="feedback-popup" class="feedback-popup">
-        <span id="feedback-text"></span>
-        <a id="feedback-link" href="#" target="_blank" class="underline ml-2 hover:text-blue-300">Consultar Ley</a>
+        <div id="feedback-text"></div>
+        <a id="feedback-link" href="#" target="_blank" class="underline mt-2 inline-block hover:text-blue-300">Consultar Ley</a>
     </div>
 
 <script>
 // --- DATABASE ---
-// Se han actualizado los enlaces para apuntar a los artículos específicos en el BOE.
 const flashcardsDB = [
     // --- DERECHO ADMINISTRATIVO ---
     {
         topic: "administrativo",
         question: "¿Qué son los Decretos-leyes según el artículo 86 de la Constitución Española?",
         correctAnswer: "Disposiciones normativas con rango de ley que el Gobierno puede dictar en casos de extraordinaria y urgente necesidad.",
+        explanation: "Los Decretos-leyes son una fuente directa del derecho administrativo, pero tienen carácter provisional y no pueden regular materias reservadas a Ley Orgánica.",
         distractors: [
             "Leyes orgánicas aprobadas por el Congreso.",
             "Reglamentos del poder ejecutivo sin rango de ley.",
@@ -156,6 +163,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "Según el artículo 94.1 CE, ¿qué tipo de Tratados requieren la previa autorización de las Cortes Generales?",
         correctAnswer: "Tratados de carácter político, militar, que afecten a la integridad territorial o a los derechos fundamentales del Título I.",
+        explanation: "Esta autorización es crucial porque estos tratados comprometen aspectos soberanos esenciales del Estado, por lo que requieren del máximo consenso parlamentario.",
         distractors: [
             "Todos los tratados internacionales sin excepción.",
             "Únicamente los tratados de carácter económico.",
@@ -168,6 +176,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué significa la inderogabilidad singular de los reglamentos?",
         correctAnswer: "Un órgano administrativo no puede dejar de aplicar un reglamento para un caso concreto mediante una decisión particular.",
+        explanation: "Este principio garantiza la igualdad ante la ley y la seguridad jurídica, impidiendo que la Administración actúe de forma arbitraria dispensando de la aplicación de normas generales.",
         distractors: [
             "Los reglamentos no pueden ser derogados por ninguna ley.",
             "Cualquier reglamento puede ser derogado por una resolución administrativa.",
@@ -180,6 +189,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué es la avocación según el artículo 10 de la LRJSP?",
         correctAnswer: "Un órgano superior atrae para sí el conocimiento de un asunto cuya resolución corresponde a un órgano inferior jerárquico.",
+        explanation: "La avocación es una excepción al principio de competencia y solo puede realizarse por motivos de eficacia o interés público, debidamente justificados.",
         distractors: [
             "La transferencia de la titularidad de la competencia a otro órgano.",
             "La delegación de la firma en un órgano inferior.",
@@ -192,6 +202,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Cuál es una diferencia clave entre un Organismo Autónomo y una Entidad Pública Empresarial?",
         correctAnswer: "Los Organismos Autónomos se rigen principalmente por derecho público, mientras que las Entidades Públicas Empresariales se rigen en gran medida por derecho privado.",
+        explanation: "Esta diferencia en el régimen jurídico afecta a su personal, contratación y gestión patrimonial, dando más flexibilidad a las Entidades Públicas Empresariales para operar en el mercado.",
         distractors: [
             "Los Organismos Autónomos tienen ánimo de lucro y las Entidades Públicas no.",
             "Solo las Entidades Públicas Empresariales tienen personalidad jurídica propia.",
@@ -204,6 +215,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "Según el artículo 14.2 de la LPAC, ¿quiénes están obligados a relacionarse electrónicamente con las AAPP?",
         correctAnswer: "Las personas jurídicas, quienes ejerzan una actividad profesional con colegiación obligatoria y quienes les representen.",
+        explanation: "La ley busca modernizar la Administración, estableciendo esta obligación para colectivos con mayor capacidad técnica y económica, mientras que para las personas físicas es un derecho.",
         distractors: [
             "Todas las personas físicas sin excepción.",
             "Únicamente las grandes empresas con más de 50 empleados.",
@@ -216,6 +228,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué efecto general tiene el silencio administrativo en procedimientos iniciados a solicitud del interesado?",
         correctAnswer: "Estimatorio (positivo), salvo que una norma con rango de Ley o de Derecho de la UE establezca lo contrario.",
+        explanation: "Es una garantía para el ciudadano frente a la inactividad de la Administración. Si la Administración no resuelve en plazo, el ciudadano puede entender que su solicitud ha sido aceptada.",
         distractors: [
             "Siempre desestimatorio (negativo).",
             "Siempre produce la caducidad del procedimiento.",
@@ -228,6 +241,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué es un acto nulo de pleno derecho según el artículo 47 de la LPAC?",
         correctAnswer: "Un acto que lesiona derechos fundamentales, dictado por órgano manifiestamente incompetente o con contenido imposible, entre otros.",
+        explanation: "La nulidad es la máxima sanción de invalidez de un acto administrativo. Sus efectos son retroactivos (ex tunc) y la acción para declararla no prescribe.",
         distractors: [
             "Un acto que contiene un simple error material que puede ser corregido.",
             "Cualquier acto que sea desfavorable para el ciudadano.",
@@ -238,8 +252,9 @@ const flashcardsDB = [
     },
     {
         topic: "administrativo",
-        question: "¿Qué plazo general establece la LPAC para el cómputo de plazos por días?",
+        question: "¿Cómo se computan los plazos por días según la LPAC?",
         correctAnswer: "Se entienden que son días hábiles, excluyendo sábados, domingos y festivos.",
+        explanation: "Esta regla es fundamental para calcular correctamente los plazos para presentar recursos o realizar trámites. Solo si una norma lo indica expresamente, los días serán naturales.",
         distractors: [
             "Siempre son días naturales, incluyendo festivos.",
             "Son días hábiles, excluyendo únicamente los domingos.",
@@ -252,6 +267,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué es la caducidad en un procedimiento iniciado a instancia de parte?",
         correctAnswer: "La finalización del procedimiento por inactividad del interesado durante los plazos establecidos, previa advertencia de la Administración.",
+        explanation: "La caducidad se produce cuando la paralización del procedimiento es imputable al interesado, y la Administración debe notificarle que, de no actuar, se archivará el expediente.",
         distractors: [
             "La anulación del procedimiento por parte de la Administración por falta de pruebas.",
             "El desistimiento voluntario del interesado.",
@@ -264,6 +280,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Contra qué actos procede el Recurso de Alzada?",
         correctAnswer: "Contra resoluciones y actos de trámite que no pongan fin a la vía administrativa.",
+        explanation: "Es un recurso jerárquico que permite que el órgano superior revise la decisión del órgano inferior, siempre que el acto no sea definitivo en vía administrativa.",
         distractors: [
             "Contra actos que pongan fin a la vía administrativa.",
             "Contra disposiciones administrativas de carácter general (reglamentos).",
@@ -276,6 +293,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "Según la LCSP, ¿qué es el 'valor estimado' de un contrato?",
         correctAnswer: "La cuantía total de las prestaciones, incluyendo prórrogas y opciones, IVA excluido, para determinar el procedimiento de adjudicación.",
+        explanation: "El valor estimado es clave para determinar si un contrato está sujeto a regulación armonizada (SARA) y qué umbrales de publicidad y procedimiento se deben aplicar, garantizando la concurrencia.",
         distractors: [
             "El precio final que se paga al adjudicatario con IVA incluido.",
             "La oferta económica más baja presentada en la licitación.",
@@ -288,6 +306,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué principio rige la responsabilidad patrimonial de la Administración según el art. 106.2 CE?",
         correctAnswer: "Los particulares serán indemnizados por toda lesión en sus bienes y derechos, salvo fuerza mayor, derivada del funcionamiento normal o anormal de los servicios públicos.",
+        explanation: "Es un sistema de responsabilidad objetiva; no se necesita demostrar culpa de la Administración, solo la existencia de un daño y una relación de causalidad con el servicio público.",
         distractors: [
             "La Administración solo responde si actúa con dolo o culpa grave.",
             "La Administración nunca responde por el funcionamiento normal de sus servicios.",
@@ -300,6 +319,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Qué es un bien de dominio público o demanial?",
         correctAnswer: "Aquel que, siendo de titularidad pública, está afectado al uso general o al servicio público.",
+        explanation: "Estos bienes (como costas, ríos, carreteras) tienen un régimen de protección especial: son inalienables, imprescriptibles e inembargables para garantizar su finalidad pública.",
         distractors: [
             "Cualquier bien propiedad de una Administración Pública.",
             "Los bienes que la Administración puede vender libremente en el mercado.",
@@ -312,6 +332,7 @@ const flashcardsDB = [
         topic: "administrativo",
         question: "¿Cuál es una de las causas de pérdida de la condición de funcionario de carrera según el EBEP?",
         correctAnswer: "La renuncia, la pérdida de la nacionalidad, la jubilación, la sanción disciplinaria de separación del servicio o la pena de inhabilitación absoluta.",
+        explanation: "El EBEP establece un listado cerrado de causas que extinguen de forma definitiva la relación de servicio del funcionario con la Administración.",
         distractors: [
             "Solicitar una excedencia voluntaria por interés particular.",
             "Obtener una mala calificación en la evaluación de desempeño.",
@@ -326,6 +347,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "¿Cuáles son las fuentes del derecho según el artículo 1.1 del Código Civil?",
         correctAnswer: "La ley, la costumbre y los principios generales del derecho.",
+        explanation: "El Código Civil establece una jerarquía de fuentes. La costumbre solo rige en defecto de ley aplicable, y los principios generales en defecto de ley o costumbre.",
         distractors: [
             "Solo la ley y la jurisprudencia.",
             "La ley, los decretos y las órdenes ministeriales.",
@@ -338,6 +360,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "¿Cuándo se adquiere la personalidad civil según el Código Civil?",
         correctAnswer: "Con el nacimiento, una vez producido el entero desprendimiento del seno materno.",
+        explanation: "La personalidad determina la aptitud para ser titular de derechos y obligaciones. El Código Civil protege también al concebido pero no nacido (nasciturus) para los efectos que le sean favorables.",
         distractors: [
             "En el momento de la concepción.",
             "Al cumplir la mayoría de edad.",
@@ -350,6 +373,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "En el régimen de sociedad de gananciales, ¿qué carácter tienen los frutos o rentas de los bienes privativos?",
         correctAnswer: "Son bienes gananciales.",
+        explanation: "Aunque el bien que los produce sea privativo de un cónyuge (ej. un piso heredado), las rentas que genera (ej. el alquiler) se integran en el patrimonio común del matrimonio.",
         distractors: [
             "Son siempre bienes privativos.",
             "Se dividen por la mitad entre privativos y gananciales.",
@@ -362,6 +386,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "Diferencia entre prescripción y caducidad.",
         correctAnswer: "La prescripción extingue la acción pero no el derecho y puede interrumpirse, mientras que la caducidad extingue el derecho y no se puede interrumpir.",
+        explanation: "La prescripción se basa en la inactividad del titular y puede ser interrumpida por reclamación. La caducidad opera automáticamente por el mero paso del tiempo fijado por la ley.",
         distractors: [
             "No hay ninguna diferencia, son términos sinónimos.",
             "La prescripción solo se aplica a derechos reales y la caducidad a derechos personales.",
@@ -374,6 +399,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "¿Qué es un derecho real de hipoteca?",
         correctAnswer: "Un derecho de garantía que recae sobre un bien inmueble para asegurar el cumplimiento de una obligación, sin desplazamiento de la posesión.",
+        explanation: "Permite al acreedor, en caso de impago, solicitar la venta del inmueble en pública subasta para cobrar su crédito con el dinero obtenido, con preferencia sobre otros acreedores.",
         distractors: [
             "Un derecho a usar y disfrutar un bien ajeno.",
             "Un contrato de alquiler con opción a compra.",
@@ -386,6 +412,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "Para que una donación de un bien inmueble sea válida, ¿qué requisito de forma exige el Código Civil?",
         correctAnswer: "Debe hacerse en escritura pública.",
+        explanation: "Es un requisito 'ad solemnitatem', es decir, su incumplimiento provoca la nulidad absoluta de la donación. No basta un documento privado.",
         distractors: [
             "Es suficiente un contrato privado.",
             "Puede hacerse verbalmente si hay testigos.",
@@ -398,6 +425,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "Según el CC, la posesión de un bien inmueble presume la posesión de...",
         correctAnswer: "Los bienes muebles que se hallen dentro de él, mientras no conste o se acredite que deben ser excluidos.",
+        explanation: "Esta presunción 'iuris tantum' (admite prueba en contrario) facilita las relaciones jurídicas, asumiendo que quien posee el continente, posee también el contenido.",
         distractors: [
             "Únicamente el suelo, no lo que hay en su interior.",
             "Otros inmuebles colindantes.",
@@ -410,6 +438,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "¿Qué es el principio de fe pública registral?",
         correctAnswer: "Protege al tercero que adquiere de buena fe y a título oneroso un derecho de quien aparece con facultades para transmitirlo en el Registro de la Propiedad.",
+        explanation: "Este principio es la piedra angular de la seguridad jurídica inmobiliaria. Lo que publica el Registro se presume exacto, protegiendo a quien confía en dicha publicidad.",
         distractors: [
             "Obliga a que todos los documentos privados se eleven a públicos.",
             "Significa que todo lo que dice un notario es cierto sin prueba en contrario.",
@@ -422,6 +451,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "¿Cuál es la principal diferencia entre las obligaciones mancomunadas y las solidarias?",
         correctAnswer: "En las mancomunadas cada deudor debe solo su parte, en las solidarias cualquiera puede ser reclamado por el total.",
+        explanation: "La solidaridad es una garantía más fuerte para el acreedor, ya que puede dirigirse contra el deudor más solvente por la totalidad de la deuda. La solidaridad no se presume, debe pactarse.",
         distractors: [
             "Las mancomunadas solo aplican a deudas de dinero y las solidarias a obligaciones de hacer.",
             "Las solidarias requieren pacto expreso, las mancomunadas son la regla general.",
@@ -434,6 +464,7 @@ const flashcardsDB = [
         topic: "civil",
         question: "Causa de nulidad de un contrato",
         correctAnswer: "La falta de uno de sus elementos esenciales: consentimiento, objeto o causa.",
+        explanation: "Un contrato sin alguno de estos tres pilares es nulo de pleno derecho, lo que significa que no produce ningún efecto jurídico desde su celebración.",
         distractors: [
             "Que una de las partes se arrepienta después de firmar.",
             "El incumplimiento de una de las cláusulas.",
@@ -448,6 +479,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "¿Cuáles son las fuentes del Derecho Mercantil según el Código de Comercio?",
         correctAnswer: "El Código de Comercio, los usos del comercio y, en su defecto, el Derecho común (civil).",
+        explanation: "A diferencia del Derecho Civil, en el Mercantil los 'usos de comercio' (costumbres mercantiles) tienen una gran importancia como fuente del derecho, aplicándose antes que el derecho común.",
         distractors: [
             "Únicamente el Código de Comercio.",
             "La ley mercantil, la costumbre civil y los principios generales del derecho.",
@@ -460,6 +492,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "¿Quiénes son considerados comerciantes para el Código de Comercio?",
         correctAnswer: "Los que, teniendo capacidad legal para ejercer el comercio, se dedican a él habitualmente, y las compañías mercantiles o industriales.",
+        explanation: "La clave es la habitualidad en el ejercicio del comercio para las personas físicas. Las sociedades mercantiles lo son por su propia forma, independientemente de su actividad.",
         distractors: [
             "Cualquier persona que realice una compra para revender.",
             "Solo las personas jurídicas inscritas en el Registro Mercantil.",
@@ -472,6 +505,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "Diferencia principal entre marca y nombre comercial.",
         correctAnswer: "La marca distingue productos o servicios en el mercado, mientras que el nombre comercial identifica a una empresa en el tráfico mercantil.",
+        explanation: "Una misma empresa (protegida por su nombre comercial) puede tener múltiples marcas para sus diferentes líneas de productos o servicios.",
         distractors: [
             "La marca se registra en la OEPM y el nombre comercial no.",
             "El nombre comercial tiene protección internacional automática y la marca no.",
@@ -484,6 +518,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "¿Qué libros contables son obligatorios para todo empresario según el Código de Comercio?",
         correctAnswer: "Un libro de Inventarios y Cuentas Anuales y otro Diario.",
+        explanation: "El libro Diario registra las operaciones día a día, y el de Inventarios y Cuentas Anuales recoge el balance inicial y los balances trimestrales de comprobación, así como las cuentas anuales al cierre.",
         distractors: [
             "Solo el libro de facturas emitidas y recibidas.",
             "El libro de actas, el libro de socios y el libro diario.",
@@ -496,6 +531,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "Diferencia fundamental en la responsabilidad de los socios en una Sociedad Colectiva y una Sociedad de Responsabilidad Limitada.",
         correctAnswer: "En la Colectiva los socios responden de forma personal, ilimitada y solidaria; en la Limitada, la responsabilidad se limita al capital aportado.",
+        explanation: "La SRL protege el patrimonio personal de los socios, siendo este el motivo principal de su popularidad. En la Colectiva, los acreedores pueden ir contra los bienes personales de los socios.",
         distractors: [
             "En la Limitada todos los socios son administradores, en la Colectiva no.",
             "La Colectiva no requiere capital mínimo, la Limitada sí.",
@@ -508,6 +544,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "¿Cuál es el capital social mínimo para constituir una Sociedad Anónima (SA)?",
         correctAnswer: "60.000 euros.",
+        explanation: "Esta cifra, superior a la de la SRL, refleja que la SA está pensada para proyectos empresariales de mayor envergadura y con posibilidad de cotizar en bolsa.",
         distractors: [
             "3.000 euros.",
             "No hay capital mínimo.",
@@ -520,6 +557,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "En una Sociedad Anónima (SA), ¿a quién corresponde la competencia para modificar los estatutos sociales?",
         correctAnswer: "A la Junta General de Accionistas.",
+        explanation: "La modificación de los estatutos es una decisión de máxima trascendencia para la sociedad, por lo que la ley reserva esta competencia al órgano soberano de la misma: la Junta General.",
         distractors: [
             "Al Consejo de Administración.",
             "Al administrador único.",
@@ -532,6 +570,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "Requisito esencial que debe contener una letra de cambio para ser válida.",
         correctAnswer: "La denominación 'letra de cambio' inserta en el propio texto del título.",
+        explanation: "Este requisito de literalidad es fundamental para la seguridad del tráfico jurídico, asegurando que todas las partes saben que están ante un título con las rigurosas consecuencias de la acción cambiaria.",
         distractors: [
             "El NIF del librado.",
             "La firma de dos testigos.",
@@ -544,6 +583,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "En el contrato de compraventa mercantil, ¿cuándo se transfiere el riesgo de pérdida de la cosa al comprador?",
         correctAnswer: "Generalmente, desde la puesta a disposición de la mercancía, incluso antes de la entrega física.",
+        explanation: "A diferencia del régimen civil, en el mercantil el riesgo se transmite con la 'puesta a disposición', lo que significa que si el comprador se retrasa en recogerla, asume el riesgo desde ese momento.",
         distractors: [
             "Solo en el momento de la entrega física de la mercancía.",
             "Desde el momento en que se firma el contrato.",
@@ -556,6 +596,7 @@ const flashcardsDB = [
         topic: "mercantil",
         question: "¿Qué es el concurso de acreedores?",
         correctAnswer: "Un procedimiento judicial que se inicia cuando una persona o empresa se encuentra en estado de insolvencia y no puede cumplir regularmente sus obligaciones.",
+        explanation: "Su finalidad es buscar una solución ordenada a la situación de insolvencia, ya sea a través de un convenio con los acreedores o mediante la liquidación del patrimonio del deudor para pagar las deudas.",
         distractors: [
             "Un acuerdo privado entre un deudor y sus acreedores para aplazar pagos.",
             "Una subasta pública de los bienes de una empresa.",
@@ -574,7 +615,7 @@ const resultsScreen = document.getElementById('results-screen');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
 const topicSelect = document.getElementById('topic');
-const numQuestionsSelect = document.getElementById('num-questions');
+const numQuestionsEl = document.getElementById('num-questions');
 
 const questionEl = document.getElementById('question');
 const optionsEl = document.getElementById('options');
@@ -620,12 +661,22 @@ function shuffleArray(array) {
 
 function startGame() {
     const selectedTopic = topicSelect.value;
-    const numQuestions = parseInt(numQuestionsSelect.value, 10);
+    let numQuestions = parseInt(numQuestionsEl.value, 10);
 
     let filteredFlashcards = flashcardsDB;
     if (selectedTopic !== 'todo') {
         filteredFlashcards = flashcardsDB.filter(card => card.topic === selectedTopic);
     }
+    
+    if (isNaN(numQuestions) || numQuestions < 1) {
+        numQuestions = 1;
+        numQuestionsEl.value = 1;
+    }
+    if (numQuestions > filteredFlashcards.length) {
+        numQuestions = filteredFlashcards.length;
+        numQuestionsEl.value = numQuestions;
+    }
+
 
     currentQuiz = shuffleArray([...filteredFlashcards]).slice(0, numQuestions);
     currentQuestionIndex = 0;
@@ -648,7 +699,7 @@ function displayQuestion() {
 
     const card = currentQuiz[currentQuestionIndex];
     progressEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${currentQuiz.length}`;
-    questionEl.innerHTML = card.question; // Use innerHTML to render potential formatting
+    questionEl.innerHTML = card.question; 
 
     optionsEl.innerHTML = '';
     const options = shuffleArray([card.correctAnswer, ...card.distractors]);
@@ -665,7 +716,6 @@ function displayQuestion() {
 }
 
 function checkAnswer(selectedOption, card, button) {
-    // Disable all buttons after an answer is selected
     const buttons = optionsEl.querySelectorAll('button');
     buttons.forEach(btn => btn.disabled = true);
 
@@ -679,7 +729,6 @@ function checkAnswer(selectedOption, card, button) {
         score.incorrect++;
         button.classList.add('btn-incorrect');
         incorrectAnswers.push(card);
-        // Highlight the correct answer
         buttons.forEach(btn => {
             if (btn.innerHTML === card.correctAnswer) {
                 btn.classList.add('btn-correct');
@@ -693,16 +742,16 @@ function checkAnswer(selectedOption, card, button) {
     setTimeout(() => {
         currentQuestionIndex++;
         displayQuestion();
-    }, 2500); // Wait 2.5 seconds before next question
+    }, 4000); // Increased timeout for reading the explanation
 }
 
 function showFeedbackPopup(isCorrect, card) {
     if (isCorrect) {
         feedbackText.innerHTML = '¡Correcto! 🎉';
-        feedbackPopup.style.backgroundColor = '#10b981'; // emerald-500
+        feedbackPopup.style.backgroundColor = '#10b981';
     } else {
-        feedbackText.innerHTML = 'Incorrecto. La respuesta es: ' + card.correctAnswer + ' 💪';
-        feedbackPopup.style.backgroundColor = '#ef4444'; // red-500
+        feedbackText.innerHTML = `Incorrecto. 💪<br><strong class="font-normal">La respuesta correcta es:</strong><br><span class="font-normal text-base">${card.correctAnswer}</span><br><em class="text-sm font-normal text-gray-300">${card.explanation}</em>`;
+        feedbackPopup.style.backgroundColor = '#ef4444';
     }
     
     feedbackLink.href = card.legalReferenceLink;
@@ -712,7 +761,7 @@ function showFeedbackPopup(isCorrect, card) {
     
     setTimeout(() => {
         feedbackPopup.classList.remove('show');
-    }, 2400);
+    }, 3900); // Slightly less than the question timer
 }
 
 function updateScoreDisplay() {
@@ -731,12 +780,14 @@ function showResults() {
 
     reviewListEl.innerHTML = '';
     if (incorrectAnswers.length > 0) {
+        reviewListEl.parentElement.style.display = 'block';
         incorrectAnswers.forEach(card => {
             const li = document.createElement('li');
             li.innerHTML = `<span class="font-semibold">${card.question}</span><br><span class="text-sm text-gray-400">Respuesta correcta: ${card.correctAnswer}</span>`;
             reviewListEl.appendChild(li);
         });
     } else {
+        reviewListEl.parentElement.style.display = 'none';
         reviewListEl.innerHTML = '<p>¡Felicidades! No has cometido ningún error. 🎉</p>';
     }
 
@@ -754,9 +805,25 @@ function restartGame() {
     setupScreen.classList.remove('hidden');
 }
 
+function updateMaxQuestions() {
+    const selectedTopic = topicSelect.value;
+    let maxQuestions = flashcardsDB.length;
+    if (selectedTopic !== 'todo') {
+        maxQuestions = flashcardsDB.filter(card => card.topic === selectedTopic).length;
+    }
+    numQuestionsEl.max = maxQuestions;
+    if (parseInt(numQuestionsEl.value) > maxQuestions) {
+        numQuestionsEl.value = maxQuestions;
+    }
+}
+
 // Event Listeners
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', restartGame);
+topicSelect.addEventListener('change', updateMaxQuestions);
+
+// Initial setup
+updateMaxQuestions();
 
 </script>
 </body>
