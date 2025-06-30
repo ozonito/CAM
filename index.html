@@ -3,915 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz de Flashcards de Derecho</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Quiz de Flashcards Legales</title>
     <style>
+        :root {
+            --bg-color: #121212;
+            --primary-text-color: #e0e0e0;
+            --secondary-text-color: #b3b3b3;
+            --card-bg-color: #1e1e1e;
+            --border-color: #333;
+            --accent-color: #bb86fc;
+            --accent-color-dark: #3700b3;
+            --correct-color: #03dac6;
+            --incorrect-color: #cf6679;
+            --button-hover-bg: #333333;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-        }
-        .card {
-            background-color: #1f2937; /* bg-gray-800 */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 2rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-        }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            border-radius: 0.5rem; /* rounded-lg */
-            text-align: left;
-            font-weight: 500;
-            transition: all 0.2s ease-in-out;
-            border: 1px solid #4b5563; /* border-gray-600 */
-            background-color: #374151; /* bg-gray-700 */
-        }
-        .btn:hover {
-            background-color: #4b5563; /* bg-gray-600 */
-            transform: translateY(-2px);
-        }
-        .btn-correct {
-            background-color: #10b981 !important; /* bg-emerald-500 */
-            color: white;
-            border-color: #059669 !important;
-        }
-        .btn-incorrect {
-            background-color: #ef4444 !important; /* bg-red-500 */
-            color: white;
-            border-color: #dc2626 !important;
-        }
-        .feedback-popup {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            color: white;
-            font-weight: 600;
-            z-index: 50;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            width: 90%;
-            max-width: 600px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             text-align: center;
         }
-        .feedback-popup.show {
-            opacity: 1;
-            visibility: visible;
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: var(--card-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
-        /* Ocultar las flechas del input numérico */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
+
+        h1, h2 {
+            color: var(--accent-color);
         }
-        input[type=number] {
-          -moz-appearance: textfield;
+
+        /* --- Pantalla de Configuración --- */
+        #setup-screen .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        #setup-screen label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--secondary-text-color);
+        }
+
+        #setup-screen input, #setup-screen select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        /* --- Pantalla del Quiz --- */
+        #quiz-screen {
+            display: none;
+        }
+
+        #progress-container {
+            margin-bottom: 20px;
+        }
+
+        #progress-text {
+            font-size: 0.9em;
+            color: var(--secondary-text-color);
+        }
+
+        #progress-bar-full {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease-in-out;
+        }
+
+        #flashcard {
+            background-color: #2c2c2c;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent-color);
+            margin-bottom: 25px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #question-text {
+            font-size: 1.3em;
+            font-weight: 500;
+        }
+
+        #options-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            font-size: 1em;
+            background-color: var(--bg-color);
+            color: var(--primary-text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--button-hover-bg);
+            border-color: var(--accent-color);
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color);
+            color: #000;
+            border-color: var(--correct-color);
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color);
+            color: #000;
+            border-color: var(--incorrect-color);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #feedback-container {
+            margin-top: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 50px;
+        }
+
+        #feedback-text a {
+            color: var(--correct-color);
+            text-decoration: none;
+        }
+         #feedback-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Pantalla de Resultados --- */
+        #results-screen {
+            display: none;
+            text-align: left;
+        }
+        
+        #results-screen h2, #results-screen h3 {
+            text-align: center;
+        }
+
+        #review-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #review-list li {
+            background-color: #2c2c2c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--incorrect-color);
+        }
+        
+        .review-question {
+            font-weight: bold;
+            color: var(--secondary-text-color);
+        }
+
+        .review-answer {
+            color: var(--correct-color);
+            margin-top: 8px;
+        }
+        
+        #usage-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        #usage-table th, #usage-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+
+        #usage-table th {
+            background-color: #2c2c2c;
+        }
+
+        #results-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+
+        /* --- Botones --- */
+        .btn {
+            background-color: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color-dark);
+            color: var(--primary-text-color);
+        }
+        
+        .btn-secondary {
+            background-color: var(--button-hover-bg);
+            color: var(--primary-text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="app-container" class="w-full max-w-2xl mx-auto">
-        <!-- Setup Screen -->
-        <div id="setup-screen" class="card text-center">
-            <h1 class="text-3xl font-bold mb-2 text-white">Quiz de Oposiciones</h1>
-            <p class="text-gray-400 mb-6">Configura tu sesión de estudio</p>
-            
-            <div class="mb-4 text-left">
-                <label for="topic" class="block mb-2 font-medium text-gray-300">Bloque Temático:</label>
-                <select id="topic" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="todo">TODO</option>
-                    <option value="administrativo">Derecho Administrativo</option>
-                    <option value="civil">Derecho Civil</option>
-                    <option value="mercantil">Derecho Mercantil</option>
+    <div class="container">
+        <!-- 1. PANTALLA DE CONFIGURACIÓN -->
+        <div id="setup-screen">
+            <h1>Flashcards Legales Interactivas</h1>
+            <p style="color: var(--secondary-text-color);">Prepárate para el éxito. Elige tus ajustes y ¡a por ello!</p>
+            <div class="form-group">
+                <label for="num-questions">¿Cuántas preguntas quieres hoy?</label>
+                <input type="number" id="num-questions" min="1" value="10">
+            </div>
+            <div class="form-group">
+                <label for="topic-select">Elige el bloque temático:</label>
+                <select id="topic-select">
+                    <option value="TODO">TODO</option>
+                    <option value="administrativo">Administrativo</option>
+                    <option value="civil">Civil</option>
+                    <option value="mercantil">Mercantil</option>
                 </select>
             </div>
-
-            <div class="mb-6 text-left">
-                <div class="flex justify-between items-center mb-2">
-                    <label for="num-questions" class="font-medium text-gray-300">Número de Preguntas:</label>
-                    <span id="available-questions-info" class="text-sm text-gray-400"></span>
-                </div>
-                <input type="number" id="num-questions" value="10" min="1" class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300 text-lg">
-                Comenzar
-            </button>
+            <button id="start-quiz-btn" class="btn">Empezar el Desafío</button>
         </div>
 
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="hidden">
-            <div class="flex justify-between items-center mb-4">
-                <span id="progress" class="text-lg font-semibold text-gray-400"></span>
-                <span id="score-display" class="text-lg font-semibold text-gray-400">✅ 0 ❌ 0</span>
-            </div>
-            <div id="quiz-card" class="card">
-                <p id="question" class="text-xl font-medium mb-6 leading-relaxed text-white"></p>
-                <div id="options" class="space-y-3">
-                    <!-- Options will be injected here -->
+        <!-- 2. PANTALLA DEL QUIZ -->
+        <div id="quiz-screen">
+            <div id="progress-container">
+                <p id="progress-text">Pregunta 1 de 10</p>
+                <div id="progress-bar-full">
+                    <div id="progress-bar"></div>
                 </div>
             </div>
-             <p id="motivational-phrase" class="text-center mt-4 text-gray-500 italic"></p>
+            <div id="flashcard">
+                <p id="question-text">Aquí va la pregunta...</p>
+            </div>
+            <div id="options-container">
+                <!-- Las opciones se generan con JS -->
+            </div>
+            <div id="feedback-container">
+                <p id="feedback-text"></p>
+            </div>
+            <button id="next-question-btn" class="btn hidden">Siguiente Pregunta</button>
         </div>
 
-        <!-- Results Screen -->
-        <div id="results-screen" class="hidden card text-center">
-            <h2 class="text-3xl font-bold mb-4 text-white">Resultados Finales</h2>
-            <div id="results-summary" class="text-xl mb-6"></div>
-            <div id="review-section" class="text-left mb-6">
-                <h3 class="text-2xl font-semibold mb-3 text-white">Conceptos a Repasar:</h3>
-                <ul id="review-list" class="list-disc pl-5 space-y-3 text-gray-300">
-                    <!-- Incorrect answers will be listed here -->
-                </ul>
+        <!-- 3. PANTALLA DE RESULTADOS -->
+        <div id="results-screen">
+            <h2>¡Reto completado!</h2>
+            <p id="score-text" style="font-size: 1.2em; text-align: center;"></p>
+            <p id="motivational-closing" style="text-align: center; color: var(--secondary-text-color);"></p>
+            
+            <div id="review-container">
+                <h3>Conceptos a repasar:</h3>
+                <ul id="review-list"></ul>
             </div>
-             <p id="final-message" class="text-lg text-gray-400 mb-6"></p>
-            <button id="restart-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
-                Volver a Jugar
-            </button>
+            
+            <h3>Estadísticas de Uso de Preguntas</h3>
+            <table id="usage-table">
+                <thead>
+                    <tr>
+                        <th>ID Pregunta</th>
+                        <th>Veces Formulada</th>
+                    </tr>
+                </thead>
+                <tbody id="usage-table-body">
+                </tbody>
+            </table>
+
+            <div id="results-buttons">
+                <button id="restart-quiz-btn" class="btn">Empezar un Nuevo Quiz</button>
+                <button id="download-csv-btn" class="btn btn-secondary">Descargar Informe de Uso (CSV)</button>
+            </div>
         </div>
     </div>
 
-    <!-- Feedback Popup -->
-    <div id="feedback-popup" class="feedback-popup">
-        <div id="feedback-text"></div>
-        <a id="feedback-link" href="#" target="_blank" class="underline mt-2 inline-block hover:text-blue-300">Consultar Ley</a>
-    </div>
+    <script>
+    // --- BASE DE DATOS DE PREGUNTAS (del CSV) ---
+    const flashcardsData = [
+        {"ID":1,"BLOQUE":"administrativo","PREGUNTA":"¿Qué plazo general establece la Ley 39/2015 para que la Administración resuelva y notifique un procedimiento si ninguna norma específica indica otro?","RESPUESTA":"El plazo máximo es de tres meses.","ARTICULO":"Art. 21.3 Ley 39/2015"},
+        {"ID":2,"BLOQUE":"administrativo","PREGUNTA":"¿Contra una resolución que pone fin a la vía administrativa, qué recurso se puede interponer?","RESPUESTA":"Recurso potestativo de reposición o directamente recurso contencioso-administrativo.","ARTICULO":"Art. 123 Ley 39/2015"},
+        {"ID":3,"BLOQUE":"administrativo","PREGUNTA":"Según la Ley 40/2015, ¿quiénes componen el sector público institucional?","RESPUESTA":"Organismos públicos, autoridades administrativas independientes, sociedades mercantiles estatales, consorcios, fundaciones del sector público, y universidades públicas no transferidas.","ARTICULO":"Art. 84 Ley 40/2015"},
+        {"ID":4,"BLOQUE":"administrativo","PREGUNTA":"¿Cuál es el plazo para interponer un recurso de alzada contra un acto administrativo que no es expreso (silencio administrativo)?","RESPUESTA":"Se puede interponer en cualquier momento a partir del día siguiente a aquel en que se produzcan los efectos del silencio administrativo.","ARTICULO":"Art. 122.1 Ley 39/2015"},
+        {"ID":5,"BLOQUE":"administrativo","PREGUNTA":"¿Qué tipo de responsabilidad patrimonial de la Administración Pública se regula en la Ley 39/2015?","RESPUESTA":"Responsabilidad objetiva, donde el particular solo debe probar la lesión, el daño y el nexo causal con el funcionamiento del servicio público.","ARTICULO":"Art. 32 Ley 40/2015"},
+        {"ID":6,"BLOQUE":"civil","PREGUNTA":"¿A partir de qué edad se adquiere la plena capacidad de obrar, según el Código Civil español?","RESPUESTA":"A los 18 años, con la mayoría de edad.","ARTICULO":"Art. 240 Código Civil"},
+        {"ID":7,"BLOQUE":"civil","PREGUNTA":"¿Cuál es el plazo de prescripción general para las acciones personales que no tengan un plazo especial fijado en el Código Civil?","RESPUESTA":"Cinco años.","ARTICULO":"Art. 1964.2 Código Civil"},
+        {"ID":8,"BLOQUE":"civil","PREGUNTA":"¿Qué es un testamento ológrafo?","RESPUESTA":"Es el testamento escrito de puño y letra por el testador, mayor de edad, con expresión del año, mes y día en que se otorgue.","ARTICULO":"Art. 688 Código Civil"},
+        {"ID":9,"BLOQUE":"civil","PREGUNTA":"En un contrato de compraventa, ¿quién paga los gastos de otorgamiento de escrituras por defecto?","RESPUESTA":"Los gastos de la escritura matriz serán de cuenta del vendedor, y los de la primera copia y los demás posteriores a la venta serán de cuenta del comprador, salvo pacto en contrario.","ARTICULO":"Art. 1455 Código Civil"},
+        {"ID":10,"BLOQUE":"civil","PREGUNTA":"¿Qué es la usucapión o prescripción adquisitiva?","RESPUESTA":"Es un modo de adquirir la propiedad y otros derechos reales por la posesión de una cosa durante un tiempo determinado y con las condiciones que fija la ley.","ARTICULO":"Art. 1930 Código Civil"},
+        {"ID":11,"BLOQUE":"mercantil","PREGUNTA":"¿Cuál es el capital social mínimo para constituir una Sociedad de Responsabilidad Limitada (SRL) en España?","RESPUESTA":"Un euro, desde la entrada en vigor de la Ley Crea y Crece.","ARTICULO":"Art. 4 Ley de Sociedades de Capital"},
+        {"ID":12,"BLOQUE":"mercantil","PREGUNTA":"¿Qué es un concurso de acreedores?","RESPUESTA":"Un procedimiento judicial que se inicia cuando una persona física o jurídica se encuentra en estado de insolvencia y no puede cumplir regularmente sus obligaciones de pago.","ARTICULO":"Texto Refundido de la Ley Concursal"},
+        {"ID":13,"BLOQUE":"mercantil","PREGUNTA":"¿Qué duración tiene el cargo de administrador en una Sociedad Anónima (SA), según la Ley de Sociedades de Capital?","RESPUESTA":"El que determinen los estatutos sociales, pero no podrá exceder de seis años y deberá ser el mismo para todos ellos.","ARTICULO":"Art. 221 Ley de Sociedades de Capital"},
+        {"ID":14,"BLOQUE":"mercantil","PREGUNTA":"¿Qué es una letra de cambio?","RESPUESTA":"Un título-valor que contiene una orden incondicionada, dada por una persona (librador) a otra (librado), de pagar una suma determinada a un tercero (tomador) o a su orden.","ARTICULO":"Ley 19/1985, Cambiaria y del Cheque"},
+        {"ID":15,"BLOQUE":"mercantil","PREGUNTA":"En una Sociedad Anónima, ¿qué quorum de asistencia se requiere, en primera convocatoria, para que la junta general ordinaria o extraordinaria pueda adoptar acuerdos?","RESPUESTA":"Los accionistas presentes o representados deberán poseer, al menos, el 25% del capital suscrito con derecho a voto.","ARTICULO":"Art. 193 Ley de Sociedades de Capital"}
+    ];
 
-<script>
-// --- DATABASE ---
-const flashcardsDB = [
-    // --- DERECHO ADMINISTRATIVO ---
-    {
-        topic: "administrativo",
-        question: "¿Qué son los Decretos-leyes según el artículo 86 de la Constitución Española?",
-        correctAnswer: "Disposiciones normativas con rango de ley que el Gobierno puede dictar en casos de extraordinaria y urgente necesidad.",
-        explanation: "Los Decretos-leyes son una fuente directa del derecho administrativo, pero tienen carácter provisional y no pueden regular materias reservadas a Ley Orgánica.",
-        distractors: [
-            "Leyes orgánicas aprobadas por el Congreso.",
-            "Reglamentos del poder ejecutivo sin rango de ley.",
-            "Leyes ordinarias que no requieren urgencia."
-        ],
-        legalReferenceText: "Art. 86 CE",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a86"
-    },
-    {
-        topic: "administrativo",
-        question: "Según el artículo 94.1 CE, ¿qué tipo de Tratados requieren la previa autorización de las Cortes Generales?",
-        correctAnswer: "Tratados de carácter político, militar, que afecten a la integridad territorial o a los derechos fundamentales del Título I.",
-        explanation: "Esta autorización es crucial porque estos tratados comprometen aspectos soberanos esenciales del Estado, por lo que requieren del máximo consenso parlamentario.",
-        distractors: [
-            "Todos los tratados internacionales sin excepción.",
-            "Únicamente los tratados de carácter económico.",
-            "Solo los tratados que no impliquen obligaciones financieras."
-        ],
-        legalReferenceText: "Art. 94.1 CE",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a94"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué significa la inderogabilidad singular de los reglamentos?",
-        correctAnswer: "Un órgano administrativo no puede dejar de aplicar un reglamento para un caso concreto mediante una decisión particular.",
-        explanation: "Este principio garantiza la igualdad ante la ley y la seguridad jurídica, impidiendo que la Administración actúe de forma arbitraria dispensando de la aplicación de normas generales.",
-        distractors: [
-            "Los reglamentos no pueden ser derogados por ninguna ley.",
-            "Cualquier reglamento puede ser derogado por una resolución administrativa.",
-            "Los ciudadanos pueden solicitar no aplicar un reglamento si les perjudica."
-        ],
-        legalReferenceText: "Art. 37.1 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a37"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué es la avocación según el artículo 10 de la LRJSP?",
-        correctAnswer: "Un órgano superior atrae para sí el conocimiento de un asunto cuya resolución corresponde a un órgano inferior jerárquico.",
-        explanation: "La avocación es una excepción al principio de competencia y solo puede realizarse por motivos de eficacia o interés público, debidamente justificados.",
-        distractors: [
-            "La transferencia de la titularidad de la competencia a otro órgano.",
-            "La delegación de la firma en un órgano inferior.",
-            "La asignación de tareas materiales a otro órgano por eficacia."
-        ],
-        legalReferenceText: "Art. 10 LRJSP",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a10"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Cuál es una diferencia clave entre un Organismo Autónomo y una Entidad Pública Empresarial?",
-        correctAnswer: "Los Organismos Autónomos se rigen principalmente por derecho público, mientras que las Entidades Públicas Empresariales se rigen en gran medida por derecho privado.",
-        explanation: "Esta diferencia en el régimen jurídico afecta a su personal, contratación y gestión patrimonial, dando más flexibilidad a las Entidades Públicas Empresariales para operar en el mercado.",
-        distractors: [
-            "Los Organismos Autónomos tienen ánimo de lucro y las Entidades Públicas no.",
-            "Solo las Entidades Públicas Empresariales tienen personalidad jurídica propia.",
-            "Los Organismos Autónomos no pueden prestar servicios, solo realizar investigación."
-        ],
-        legalReferenceText: "Arts. 88 y 103 LRJSP",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a88"
-    },
-    {
-        topic: "administrativo",
-        question: "Según el artículo 14.2 de la LPAC, ¿quiénes están obligados a relacionarse electrónicamente con las AAPP?",
-        correctAnswer: "Las personas jurídicas, quienes ejerzan una actividad profesional con colegiación obligatoria y quienes les representen.",
-        explanation: "La ley busca modernizar la Administración, estableciendo esta obligación para colectivos con mayor capacidad técnica y económica, mientras que para las personas físicas es un derecho.",
-        distractors: [
-            "Todas las personas físicas sin excepción.",
-            "Únicamente las grandes empresas con más de 50 empleados.",
-            "Solo las personas que voluntariamente elijan ese medio."
-        ],
-        legalReferenceText: "Art. 14.2 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a14"
-    },
-     {
-        topic: "administrativo",
-        question: "¿Qué efecto general tiene el silencio administrativo en procedimientos iniciados a solicitud del interesado?",
-        correctAnswer: "Estimatorio (positivo), salvo que una norma con rango de Ley o de Derecho de la UE establezca lo contrario.",
-        explanation: "Es una garantía para el ciudadano frente a la inactividad de la Administración. Si la Administración no resuelve en plazo, el ciudadano puede entender que su solicitud ha sido aceptada.",
-        distractors: [
-            "Siempre desestimatorio (negativo).",
-            "Siempre produce la caducidad del procedimiento.",
-            "Depende de la decisión posterior del órgano administrativo."
-        ],
-        legalReferenceText: "Art. 24 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a24"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué es un acto nulo de pleno derecho según el artículo 47 de la LPAC?",
-        correctAnswer: "Un acto que lesiona derechos fundamentales, dictado por órgano manifiestamente incompetente o con contenido imposible, entre otros.",
-        explanation: "La nulidad es la máxima sanción de invalidez de un acto administrativo. Sus efectos son retroactivos (ex tunc) y la acción para declararla no prescribe.",
-        distractors: [
-            "Un acto que contiene un simple error material que puede ser corregido.",
-            "Cualquier acto que sea desfavorable para el ciudadano.",
-            "Un acto que no ha sido notificado en el plazo de 10 días."
-        ],
-        legalReferenceText: "Art. 47 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a47"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Cómo se computan los plazos por días según la LPAC?",
-        correctAnswer: "Se entienden que son días hábiles, excluyendo sábados, domingos y festivos.",
-        explanation: "Esta regla es fundamental para calcular correctamente los plazos para presentar recursos o realizar trámites. Solo si una norma lo indica expresamente, los días serán naturales.",
-        distractors: [
-            "Siempre son días naturales, incluyendo festivos.",
-            "Son días hábiles, excluyendo únicamente los domingos.",
-            "Son 15 días naturales si la ley no dice nada."
-        ],
-        legalReferenceText: "Art. 30 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a30"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué es la caducidad en un procedimiento iniciado a instancia de parte?",
-        correctAnswer: "La finalización del procedimiento por inactividad del interesado durante los plazos establecidos, previa advertencia de la Administración.",
-        explanation: "La caducidad se produce cuando la paralización del procedimiento es imputable al interesado, y la Administración debe notificarle que, de no actuar, se archivará el expediente.",
-        distractors: [
-            "La anulación del procedimiento por parte de la Administración por falta de pruebas.",
-            "El desistimiento voluntario del interesado.",
-            "La prescripción de la acción para iniciar el procedimiento."
-        ],
-        legalReferenceText: "Art. 95 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a95"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Contra qué actos procede el Recurso de Alzada?",
-        correctAnswer: "Contra resoluciones y actos de trámite que no pongan fin a la vía administrativa.",
-        explanation: "Es un recurso jerárquico que permite que el órgano superior revise la decisión del órgano inferior, siempre que el acto no sea definitivo en vía administrativa.",
-        distractors: [
-            "Contra actos que pongan fin a la vía administrativa.",
-            "Contra disposiciones administrativas de carácter general (reglamentos).",
-            "Únicamente contra sentencias judiciales firmes."
-        ],
-        legalReferenceText: "Art. 121 LPAC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a121"
-    },
-    {
-        topic: "administrativo",
-        question: "Según la LCSP, ¿qué es el 'valor estimado' de un contrato?",
-        correctAnswer: "La cuantía total de las prestaciones, incluyendo prórrogas y opciones, IVA excluido, para determinar el procedimiento de adjudicación.",
-        explanation: "El valor estimado es clave para determinar si un contrato está sujeto a regulación armonizada (SARA) y qué umbrales de publicidad y procedimiento se deben aplicar, garantizando la concurrencia.",
-        distractors: [
-            "El precio final que se paga al adjudicatario con IVA incluido.",
-            "La oferta económica más baja presentada en la licitación.",
-            "El presupuesto máximo que la Administración puede gastar."
-        ],
-        legalReferenceText: "Art. 101 LCSP",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a101"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué principio rige la responsabilidad patrimonial de la Administración según el art. 106.2 CE?",
-        correctAnswer: "Los particulares serán indemnizados por toda lesión en sus bienes y derechos, salvo fuerza mayor, derivada del funcionamiento normal o anormal de los servicios públicos.",
-        explanation: "Es un sistema de responsabilidad objetiva; no se necesita demostrar culpa de la Administración, solo la existencia de un daño y una relación de causalidad con el servicio público.",
-        distractors: [
-            "La Administración solo responde si actúa con dolo o culpa grave.",
-            "La Administración nunca responde por el funcionamiento normal de sus servicios.",
-            "Los particulares deben demostrar siempre que la Administración cometió una ilegalidad."
-        ],
-        legalReferenceText: "Art. 106.2 CE",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1978-31229#a106"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Qué es un bien de dominio público o demanial?",
-        correctAnswer: "Aquel que, siendo de titularidad pública, está afectado al uso general o al servicio público.",
-        explanation: "Estos bienes (como costas, ríos, carreteras) tienen un régimen de protección especial: son inalienables, imprescriptibles e inembargables para garantizar su finalidad pública.",
-        distractors: [
-            "Cualquier bien propiedad de una Administración Pública.",
-            "Los bienes que la Administración puede vender libremente en el mercado.",
-            "Los bienes embargados por la Hacienda Pública."
-        ],
-        legalReferenceText: "Art. 5 Ley 33/2003",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2003-20254#a5"
-    },
-    {
-        topic: "administrativo",
-        question: "¿Cuál es una de las causas de pérdida de la condición de funcionario de carrera según el EBEP?",
-        correctAnswer: "La renuncia, la pérdida de la nacionalidad, la jubilación, la sanción disciplinaria de separación del servicio o la pena de inhabilitación absoluta.",
-        explanation: "El EBEP establece un listado cerrado de causas que extinguen de forma definitiva la relación de servicio del funcionario con la Administración.",
-        distractors: [
-            "Solicitar una excedencia voluntaria por interés particular.",
-            "Obtener una mala calificación en la evaluación de desempeño.",
-            "Cambiar de destino a otra Administración Pública."
-        ],
-        legalReferenceText: "Art. 63 TREBEP",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11719#a63"
-    },
+    // --- ELEMENTOS DEL DOM ---
+    const setupScreen = document.getElementById('setup-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultsScreen = document.getElementById('results-screen');
+
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    const numQuestionsInput = document.getElementById('num-questions');
+    const topicSelect = document.getElementById('topic-select');
+
+    const progressText = document.getElementById('progress-text');
+    const progressBar = document.getElementById('progress-bar');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextQuestionBtn = document.getElementById('next-question-btn');
+
+    const scoreText = document.getElementById('score-text');
+    const motivationalClosing = document.getElementById('motivational-closing');
+    const reviewContainer = document.getElementById('review-container');
+    const reviewList = document.getElementById('review-list');
+    const usageTableBody = document.getElementById('usage-table-body');
+    const restartQuizBtn = document.getElementById('restart-quiz-btn');
+    const downloadCsvBtn = document.getElementById('download-csv-btn');
+
+    // --- ESTADO DEL JUEGO ---
+    let currentQuizQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let incorrectAnswers = [];
+
+    // --- FRASES MOTIVACIONALES ---
+    const positivePhrases = ["¡Excelente!", "¡Sigue así!", "¡Imparable!", "¡Dominando la materia!", "¡Lo sabías!"];
+    const encouragingPhrases = ["¡Ánimo!", "¡El error es parte del aprendizaje!", "¡La próxima será!", "¡Sigue esforzándote!"];
+    const closingPhrases = [
+        "Cada pregunta respondida es un paso más hacia tu meta. ¡Sigue adelante con determinación!",
+        "El conocimiento es poder. Hoy has demostrado tu compromiso. ¡No te detengas!",
+        "El esfuerzo de hoy es la victoria de mañana. ¡Gran trabajo!",
+        "Has completado el desafío. Analiza tus resultados y vuelve más fuerte."
+    ];
+
+    // --- LÓGICA DE LOCALSTORAGE (SISTEMA DE NO REPETICIÓN) ---
+    const storageKeys = {
+        seen: 'flashcardQuizSeenQuestions',
+        usage: 'flashcardQuizUsageCount'
+    };
+
+    const getFromStorage = (key) => {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : {};
+    };
+
+    const saveToStorage = (key, data) => {
+        localStorage.setItem(key, JSON.stringify(data));
+    };
     
-    // --- DERECHO CIVIL ---
-    {
-        topic: "civil",
-        question: "¿Cuáles son las fuentes del derecho según el artículo 1.1 del Código Civil?",
-        correctAnswer: "La ley, la costumbre y los principios generales del derecho.",
-        explanation: "El Código Civil establece una jerarquía de fuentes. La costumbre solo rige en defecto de ley aplicable, y los principios generales en defecto de ley o costumbre.",
-        distractors: [
-            "Solo la ley y la jurisprudencia.",
-            "La ley, los decretos y las órdenes ministeriales.",
-            "La Constitución, la ley y los tratados internacionales."
-        ],
-        legalReferenceText: "Art. 1.1 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1"
-    },
-    {
-        topic: "civil",
-        question: "¿Cuándo se adquiere la personalidad civil según el Código Civil?",
-        correctAnswer: "Con el nacimiento, una vez producido el entero desprendimiento del seno materno.",
-        explanation: "La personalidad determina la aptitud para ser titular de derechos y obligaciones. El Código Civil protege también al concebido pero no nacido (nasciturus) para los efectos que le sean favorables.",
-        distractors: [
-            "En el momento de la concepción.",
-            "Al cumplir la mayoría de edad.",
-            "Al ser inscrito en el Registro Civil."
-        ],
-        legalReferenceText: "Art. 30 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art30"
-    },
-    {
-        topic: "civil",
-        question: "En el régimen de sociedad de gananciales, ¿qué carácter tienen los frutos o rentas de los bienes privativos?",
-        correctAnswer: "Son bienes gananciales.",
-        explanation: "Aunque el bien que los produce sea privativo de un cónyuge (ej. un piso heredado), las rentas que genera (ej. el alquiler) se integran en el patrimonio común del matrimonio.",
-        distractors: [
-            "Son siempre bienes privativos.",
-            "Se dividen por la mitad entre privativos y gananciales.",
-            "Pertenecen al cónyuge que sea titular del bien privativo."
-        ],
-        legalReferenceText: "Art. 1347 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1347"
-    },
-    {
-        topic: "civil",
-        question: "Diferencia entre prescripción y caducidad.",
-        correctAnswer: "La prescripción extingue la acción pero no el derecho y puede interrumpirse, mientras que la caducidad extingue el derecho y no se puede interrumpir.",
-        explanation: "La prescripción se basa en la inactividad del titular y puede ser interrumpida por reclamación. La caducidad opera automáticamente por el mero paso del tiempo fijado por la ley.",
-        distractors: [
-            "No hay ninguna diferencia, son términos sinónimos.",
-            "La prescripción solo se aplica a derechos reales y la caducidad a derechos personales.",
-            "La caducidad puede ser interrumpida por reclamación judicial, pero la prescripción no."
-        ],
-        legalReferenceText: "Arts. 1961 y ss. CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1961"
-    },
-    {
-        topic: "civil",
-        question: "¿Qué es un derecho real de hipoteca?",
-        correctAnswer: "Un derecho de garantía que recae sobre un bien inmueble para asegurar el cumplimiento de una obligación, sin desplazamiento de la posesión.",
-        explanation: "Permite al acreedor, en caso de impago, solicitar la venta del inmueble en pública subasta para cobrar su crédito con el dinero obtenido, con preferencia sobre otros acreedores.",
-        distractors: [
-            "Un derecho a usar y disfrutar un bien ajeno.",
-            "Un contrato de alquiler con opción a compra.",
-            "Un derecho de garantía sobre un bien mueble con entrega de la posesión."
-        ],
-        legalReferenceText: "Art. 1876 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1876"
-    },
-    {
-        topic: "civil",
-        question: "Para que una donación de un bien inmueble sea válida, ¿qué requisito de forma exige el Código Civil?",
-        correctAnswer: "Debe hacerse en escritura pública.",
-        explanation: "Es un requisito 'ad solemnitatem', es decir, su incumplimiento provoca la nulidad absoluta de la donación. No basta un documento privado.",
-        distractors: [
-            "Es suficiente un contrato privado.",
-            "Puede hacerse verbalmente si hay testigos.",
-            "Requiere inscripción obligatoria en el Registro de la Propiedad para ser válida."
-        ],
-        legalReferenceText: "Art. 633 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art633"
-    },
-    {
-        topic: "civil",
-        question: "Según el CC, la posesión de un bien inmueble presume la posesión de...",
-        correctAnswer: "Los bienes muebles que se hallen dentro de él, mientras no conste o se acredite que deben ser excluidos.",
-        explanation: "Esta presunción 'iuris tantum' (admite prueba en contrario) facilita las relaciones jurídicas, asumiendo que quien posee el continente, posee también el contenido.",
-        distractors: [
-            "Únicamente el suelo, no lo que hay en su interior.",
-            "Otros inmuebles colindantes.",
-            "Los derechos de autor sobre las obras creadas en él."
-        ],
-        legalReferenceText: "Art. 449 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art449"
-    },
-    {
-        topic: "civil",
-        question: "¿Qué es el principio de fe pública registral?",
-        correctAnswer: "Protege al tercero que adquiere de buena fe y a título oneroso un derecho de quien aparece con facultades para transmitirlo en el Registro de la Propiedad.",
-        explanation: "Este principio es la piedra angular de la seguridad jurídica inmobiliaria. Lo que publica el Registro se presume exacto, protegiendo a quien confía en dicha publicidad.",
-        distractors: [
-            "Obliga a que todos los documentos privados se eleven a públicos.",
-            "Significa que todo lo que dice un notario es cierto sin prueba en contrario.",
-            "Presume que todos los bienes inmuebles están inscritos en el Registro."
-        ],
-        legalReferenceText: "Art. 34 Ley Hipotecaria",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1946-2453#a34"
-    },
-    {
-        topic: "civil",
-        question: "¿Cuál es la principal diferencia entre las obligaciones mancomunadas y las solidarias?",
-        correctAnswer: "En las mancomunadas cada deudor debe solo su parte, en las solidarias cualquiera puede ser reclamado por el total.",
-        explanation: "La solidaridad es una garantía más fuerte para el acreedor, ya que puede dirigirse contra el deudor más solvente por la totalidad de la deuda. La solidaridad no se presume, debe pactarse.",
-        distractors: [
-            "Las mancomunadas solo aplican a deudas de dinero y las solidarias a obligaciones de hacer.",
-            "Las solidarias requieren pacto expreso, las mancomunadas son la regla general.",
-            "Las mancomunadas no admiten varios acreedores, las solidarias sí."
-        ],
-        legalReferenceText: "Art. 1137 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1137"
-    },
-    {
-        topic: "civil",
-        question: "Causa de nulidad de un contrato",
-        correctAnswer: "La falta de uno de sus elementos esenciales: consentimiento, objeto o causa.",
-        explanation: "Un contrato sin alguno de estos tres pilares es nulo de pleno derecho, lo que significa que no produce ningún efecto jurídico desde su celebración.",
-        distractors: [
-            "Que una de las partes se arrepienta después de firmar.",
-            "El incumplimiento de una de las cláusulas.",
-            "Que el contrato sea perjudicial para una de las partes (lesión)."
-        ],
-        legalReferenceText: "Art. 1261 CC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1889-4763#art1261"
-    },
-    
-    // --- DERECHO MERCANTIL ---
-    {
-        topic: "mercantil",
-        question: "¿Cuáles son las fuentes del Derecho Mercantil según el Código de Comercio?",
-        correctAnswer: "El Código de Comercio, los usos del comercio y, en su defecto, el Derecho común (civil).",
-        explanation: "A diferencia del Derecho Civil, en el Mercantil los 'usos de comercio' (costumbres mercantiles) tienen una gran importancia como fuente del derecho, aplicándose antes que el derecho común.",
-        distractors: [
-            "Únicamente el Código de Comercio.",
-            "La ley mercantil, la costumbre civil y los principios generales del derecho.",
-            "Los tratados internacionales y la jurisprudencia del Tribunal Supremo."
-        ],
-        legalReferenceText: "Art. 2 CCo",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a2"
-    },
-    {
-        topic: "mercantil",
-        question: "¿Quiénes son considerados comerciantes para el Código de Comercio?",
-        correctAnswer: "Los que, teniendo capacidad legal para ejercer el comercio, se dedican a él habitualmente, y las compañías mercantiles o industriales.",
-        explanation: "La clave es la habitualidad en el ejercicio del comercio para las personas físicas. Las sociedades mercantiles lo son por su propia forma, independientemente de su actividad.",
-        distractors: [
-            "Cualquier persona que realice una compra para revender.",
-            "Solo las personas jurídicas inscritas en el Registro Mercantil.",
-            "Los artesanos y agricultores."
-        ],
-        legalReferenceText: "Art. 1 CCo",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a1"
-    },
-    {
-        topic: "mercantil",
-        question: "Diferencia principal entre marca y nombre comercial.",
-        correctAnswer: "La marca distingue productos o servicios en el mercado, mientras que el nombre comercial identifica a una empresa en el tráfico mercantil.",
-        explanation: "Una misma empresa (protegida por su nombre comercial) puede tener múltiples marcas para sus diferentes líneas de productos o servicios.",
-        distractors: [
-            "La marca se registra en la OEPM y el nombre comercial no.",
-            "El nombre comercial tiene protección internacional automática y la marca no.",
-            "Son sinónimos y se pueden usar indistintamente."
-        ],
-        legalReferenceText: "Ley 17/2001 de Marcas",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2001-23093"
-    },
-    {
-        topic: "mercantil",
-        question: "¿Qué libros contables son obligatorios para todo empresario según el Código de Comercio?",
-        correctAnswer: "Un libro de Inventarios y Cuentas Anuales y otro Diario.",
-        explanation: "El libro Diario registra las operaciones día a día, y el de Inventarios y Cuentas Anuales recoge el balance inicial y los balances trimestrales de comprobación, así como las cuentas anuales al cierre.",
-        distractors: [
-            "Solo el libro de facturas emitidas y recibidas.",
-            "El libro de actas, el libro de socios y el libro diario.",
-            "Ninguno es obligatorio, solo recomendable."
-        ],
-        legalReferenceText: "Art. 25 CCo",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a25"
-    },
-    {
-        topic: "mercantil",
-        question: "Diferencia fundamental en la responsabilidad de los socios en una Sociedad Colectiva y una Sociedad de Responsabilidad Limitada.",
-        correctAnswer: "En la Colectiva los socios responden de forma personal, ilimitada y solidaria; en la Limitada, la responsabilidad se limita al capital aportado.",
-        explanation: "La SRL protege el patrimonio personal de los socios, siendo este el motivo principal de su popularidad. En la Colectiva, los acreedores pueden ir contra los bienes personales de los socios.",
-        distractors: [
-            "En la Limitada todos los socios son administradores, en la Colectiva no.",
-            "La Colectiva no requiere capital mínimo, la Limitada sí.",
-            "En la Colectiva los socios no pueden trabajar en la empresa, en la Limitada sí."
-        ],
-        legalReferenceText: "Art. 127 CCo y TRLSC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a127"
-    },
-    {
-        topic: "mercantil",
-        question: "¿Cuál es el capital social mínimo para constituir una Sociedad Anónima (SA)?",
-        correctAnswer: "60.000 euros.",
-        explanation: "Esta cifra, superior a la de la SRL, refleja que la SA está pensada para proyectos empresariales de mayor envergadura y con posibilidad de cotizar en bolsa.",
-        distractors: [
-            "3.000 euros.",
-            "No hay capital mínimo.",
-            "120.000 euros."
-        ],
-        legalReferenceText: "Art. 4 TRLSC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-10544#a4"
-    },
-    {
-        topic: "mercantil",
-        question: "En una Sociedad Anónima (SA), ¿a quién corresponde la competencia para modificar los estatutos sociales?",
-        correctAnswer: "A la Junta General de Accionistas.",
-        explanation: "La modificación de los estatutos es una decisión de máxima trascendencia para la sociedad, por lo que la ley reserva esta competencia al órgano soberano de la misma: la Junta General.",
-        distractors: [
-            "Al Consejo de Administración.",
-            "Al administrador único.",
-            "Al Registrador Mercantil."
-        ],
-        legalReferenceText: "Art. 160 TRLSC",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-10544#a160"
-    },
-    {
-        topic: "mercantil",
-        question: "Requisito esencial que debe contener una letra de cambio para ser válida.",
-        correctAnswer: "La denominación 'letra de cambio' inserta en el propio texto del título.",
-        explanation: "Este requisito de literalidad es fundamental para la seguridad del tráfico jurídico, asegurando que todas las partes saben que están ante un título con las rigurosas consecuencias de la acción cambiaria.",
-        distractors: [
-            "El NIF del librado.",
-            "La firma de dos testigos.",
-            "Estar emitida en papel timbrado oficial."
-        ],
-        legalReferenceText: "Art. 1 Ley Cambiaria",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1985-15264#a1"
-    },
-    {
-        topic: "mercantil",
-        question: "En el contrato de compraventa mercantil, ¿cuándo se transfiere el riesgo de pérdida de la cosa al comprador?",
-        correctAnswer: "Generalmente, desde la puesta a disposición de la mercancía, incluso antes de la entrega física.",
-        explanation: "A diferencia del régimen civil, en el mercantil el riesgo se transmite con la 'puesta a disposición', lo que significa que si el comprador se retrasa en recogerla, asume el riesgo desde ese momento.",
-        distractors: [
-            "Solo en el momento de la entrega física de la mercancía.",
-            "Desde el momento en que se firma el contrato.",
-            "Nunca se transfiere el riesgo, siempre es del vendedor."
-        ],
-        legalReferenceText: "Art. 333 CCo",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a333"
-    },
-    {
-        topic: "mercantil",
-        question: "¿Qué es el concurso de acreedores?",
-        correctAnswer: "Un procedimiento judicial que se inicia cuando una persona o empresa se encuentra en estado de insolvencia y no puede cumplir regularmente sus obligaciones.",
-        explanation: "Su finalidad es buscar una solución ordenada a la situación de insolvencia, ya sea a través de un convenio con los acreedores o mediante la liquidación del patrimonio del deudor para pagar las deudas.",
-        distractors: [
-            "Un acuerdo privado entre un deudor y sus acreedores para aplazar pagos.",
-            "Una subasta pública de los bienes de una empresa.",
-            "Un tipo de sociedad mercantil para situaciones de crisis."
-        ],
-        legalReferenceText: "TR Ley Concursal",
-        legalReferenceLink: "https://www.boe.es/buscar/act.php?id=BOE-A-2020-4859"
-    }
-];
+    // --- LÓGICA DEL JUEGO ---
 
-// --- APPLICATION LOGIC ---
-const STORAGE_KEY = 'flashcardQuizAskedQuestions';
-
-const setupScreen = document.getElementById('setup-screen');
-const quizScreen = document.getElementById('quiz-screen');
-const resultsScreen = document.getElementById('results-screen');
-
-const startBtn = document.getElementById('start-btn');
-const restartBtn = document.getElementById('restart-btn');
-const topicSelect = document.getElementById('topic');
-const numQuestionsEl = document.getElementById('num-questions');
-const availableQuestionsInfoEl = document.getElementById('available-questions-info');
-
-const questionEl = document.getElementById('question');
-const optionsEl = document.getElementById('options');
-const progressEl = document.getElementById('progress');
-const scoreDisplayEl = document.getElementById('score-display');
-const motivationalPhraseEl = document.getElementById('motivational-phrase');
-
-const resultsSummaryEl = document.getElementById('results-summary');
-const reviewListEl = document.getElementById('review-list');
-const finalMessageEl = document.getElementById('final-message');
-
-const feedbackPopup = document.getElementById('feedback-popup');
-const feedbackText = document.getElementById('feedback-text');
-const feedbackLink = document.getElementById('feedback-link');
-
-let currentQuiz = [];
-let currentQuestionIndex = 0;
-let score = { correct: 0, incorrect: 0 };
-let incorrectAnswers = [];
-
-const motivationalPhrases = [
-    "Cada pregunta es un paso más hacia tu meta. ¡Sigue así!",
-    "La constancia es la clave del éxito. ¡No te rindas!",
-    "El esfuerzo de hoy es la recompensa de mañana.",
-    "Estás construyendo un futuro brillante. ¡Ánimo!",
-    "Confía en tu preparación. ¡Puedes con esto!"
-];
-
-const finalMessages = {
-    good: "¡Excelente trabajo! Tu dedicación está dando frutos. Sigue repasando y consolidando tus conocimientos.",
-    medium: "¡Buen esfuerzo! Vas por el buen camino. Concéntrate en las áreas de repaso y verás cómo mejoras.",
-    bad: "¡No te desanimes! Cada intento es una oportunidad de aprendizaje. Revisa los conceptos y vuelve a intentarlo con más fuerza."
-};
-
-// --- Persistence Logic ---
-function getAskedQuestions() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const defaultStructure = { administrativo: [], civil: [], mercantil: [] };
-    if (stored) {
-        // Ensure the stored object has the correct keys
-        const parsed = JSON.parse(stored);
-        return { ...defaultStructure, ...parsed };
-    }
-    return defaultStructure;
-}
-
-function saveAskedQuestions(asked) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(asked));
-}
-
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-function startGame() {
-    const selectedTopic = topicSelect.value;
-    let numQuestions = parseInt(numQuestionsEl.value, 10);
-
-    let askedQuestions = getAskedQuestions();
-    
-    // 1. Get all cards for the topic, with original index
-    const allCardsWithIndex = flashcardsDB.map((card, index) => ({ ...card, originalIndex: index }));
-    let topicPool = allCardsWithIndex;
-    if (selectedTopic !== 'todo') {
-        topicPool = allCardsWithIndex.filter(card => card.topic === selectedTopic);
-    }
-
-    // 2. Determine unasked questions
-    let askedIndicesForTopic;
-    if (selectedTopic === 'todo') {
-        askedIndicesForTopic = new Set([...askedQuestions.administrativo, ...askedQuestions.civil, ...askedQuestions.mercantil]);
-    } else {
-        askedIndicesForTopic = new Set(askedQuestions[selectedTopic] || []);
-    }
-
-    let unaskedPool = topicPool.filter(card => !askedIndicesForTopic.has(card.originalIndex));
-
-    // 3. If no unasked questions, reset the pool for that topic
-    if (unaskedPool.length === 0 && topicPool.length > 0) {
-        if (selectedTopic === 'todo') {
-             askedQuestions = { administrativo: [], civil: [], mercantil: [] };
-        } else {
-             askedQuestions[selectedTopic] = [];
-        }
-        unaskedPool = topicPool; // Use the full pool again
-    }
-
-    // 4. Validate number of questions against available pool
-    if (isNaN(numQuestions) || numQuestions < 1) {
-        numQuestions = 1;
-    }
-    if (numQuestions > unaskedPool.length) {
-        numQuestions = unaskedPool.length;
-    }
-    numQuestionsEl.value = numQuestions;
-    
-    // 5. Create the quiz and update tracking
-    currentQuiz = shuffleArray([...unaskedPool]).slice(0, numQuestions);
-    
-    const newAskedIndices = currentQuiz.map(card => card.originalIndex);
-    if (selectedTopic === 'todo') {
-        newAskedIndices.forEach(index => {
-            const topicOfCard = flashcardsDB[index].topic;
-            if (!askedQuestions[topicOfCard].includes(index)) {
-                askedQuestions[topicOfCard].push(index);
-            }
-        });
-    } else {
-        // Add only new indices to avoid duplicates
-        newAskedIndices.forEach(index => {
-            if (!askedQuestions[selectedTopic].includes(index)) {
-                 askedQuestions[selectedTopic].push(index);
-            }
-        });
-    }
-    saveAskedQuestions(askedQuestions);
-
-
-    // 6. Start the game UI
-    currentQuestionIndex = 0;
-    score = { correct: 0, incorrect: 0 };
-    incorrectAnswers = [];
-
-    updateScoreDisplay();
-    setupScreen.classList.add('hidden');
-    resultsScreen.classList.add('hidden');
-    quizScreen.classList.remove('hidden');
-    
-    displayQuestion();
-}
-
-function displayQuestion() {
-    if (currentQuestionIndex >= currentQuiz.length) {
-        showResults();
-        return;
-    }
-
-    const card = currentQuiz[currentQuestionIndex];
-    progressEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${currentQuiz.length}`;
-    questionEl.innerHTML = card.question; 
-
-    optionsEl.innerHTML = '';
-    const options = shuffleArray([card.correctAnswer, ...card.distractors]);
-    
-    options.forEach(option => {
-        const button = document.createElement('button');
-        button.className = 'btn text-white';
-        button.innerHTML = option;
-        button.addEventListener('click', () => checkAnswer(option, card, button));
-        optionsEl.appendChild(button);
+    startQuizBtn.addEventListener('click', startQuiz);
+    nextQuestionBtn.addEventListener('click', showNextQuestion);
+    restartQuizBtn.addEventListener('click', () => {
+        resultsScreen.style.display = 'none';
+        setupScreen.style.display = 'block';
     });
-    
-    motivationalPhraseEl.textContent = motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)];
-}
+    downloadCsvBtn.addEventListener('click', downloadUsageReport);
 
-function checkAnswer(selectedOption, card, button) {
-    const buttons = optionsEl.querySelectorAll('button');
-    buttons.forEach(btn => btn.disabled = true);
+    function startQuiz() {
+        const numQuestions = parseInt(numQuestionsInput.value);
+        const selectedTopic = topicSelect.value;
 
-    const isCorrect = selectedOption === card.correctAnswer;
+        let availableQuestions = flashcardsData;
+        if (selectedTopic !== 'TODO') {
+            availableQuestions = flashcardsData.filter(q => q.BLOQUE === selectedTopic);
+        }
+
+        let seenQuestions = getFromStorage(storageKeys.seen);
+        let seenInTopic = seenQuestions[selectedTopic] || [];
+        
+        let unseenQuestions = availableQuestions.filter(q => !seenInTopic.includes(q.ID));
+
+        if (unseenQuestions.length === 0 && availableQuestions.length > 0) {
+            alert(`¡Enhorabuena! Has completado todas las preguntas del bloque '${selectedTopic}'. El ciclo se reiniciará.`);
+            seenInTopic = [];
+            unseenQuestions = availableQuestions;
+            // Actualizar el storage para reflejar el reinicio
+            seenQuestions[selectedTopic] = [];
+            saveToStorage(storageKeys.seen, seenQuestions);
+        }
+        
+        currentQuizQuestions = shuffleArray(unseenQuestions).slice(0, numQuestions);
+
+        if(currentQuizQuestions.length < numQuestions && currentQuizQuestions.length > 0){
+            alert(`Solo quedan ${currentQuizQuestions.length} preguntas sin ver en este bloque. Se mostrarán esas.`);
+        }
+        
+        if (currentQuizQuestions.length === 0) {
+            alert("No hay preguntas disponibles para los criterios seleccionados.");
+            return;
+        }
+
+        currentQuestionIndex = 0;
+        score = 0;
+        incorrectAnswers = [];
+        
+        setupScreen.style.display = 'none';
+        quizScreen.style.display = 'block';
+        resultsScreen.style.display = 'none';
+        nextQuestionBtn.classList.add('hidden');
+        
+        displayQuestion();
+    }
     
-    if (isCorrect) {
-        score.correct++;
-        button.classList.add('btn-correct');
-        showFeedbackPopup(true, card);
-    } else {
-        score.incorrect++;
-        button.classList.add('btn-incorrect');
-        incorrectAnswers.push(card);
-        buttons.forEach(btn => {
-            if (btn.innerHTML === card.correctAnswer) {
-                btn.classList.add('btn-correct');
-            }
+    function displayQuestion() {
+        if (currentQuestionIndex >= currentQuizQuestions.length) {
+            showResults();
+            return;
+        }
+
+        const question = currentQuizQuestions[currentQuestionIndex];
+        
+        const progress = ((currentQuestionIndex + 1) / currentQuizQuestions.length) * 100;
+        progressText.textContent = `Pregunta ${currentQuestionIndex + 1} de ${currentQuizQuestions.length} | Progreso Total: ${Math.round(progress)}%`;
+        progressBar.style.width = `${progress}%`;
+
+        questionText.textContent = question.PREGUNTA;
+        optionsContainer.innerHTML = '';
+        feedbackText.innerHTML = '';
+
+        const correctAnswer = `${question.RESPUESTA} (${question.ARTICULO})`;
+        const incorrectOptions = generateIncorrectOptions(question);
+        const options = shuffleArray([correctAnswer, ...incorrectOptions]);
+
+        options.forEach(optionText => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = optionText;
+            button.addEventListener('click', () => selectAnswer(button, optionText, correctAnswer));
+            optionsContainer.appendChild(button);
         });
-        showFeedbackPopup(false, card);
+
+        nextQuestionBtn.classList.add('hidden');
     }
 
-    updateScoreDisplay();
-    
-    setTimeout(() => {
+    function selectAnswer(button, selectedAnswer, correctAnswer) {
+        Array.from(optionsContainer.children).forEach(btn => {
+            btn.disabled = true;
+            if (btn.innerHTML === correctAnswer) {
+                btn.classList.add('correct');
+            }
+        });
+
+        const isCorrect = selectedAnswer === correctAnswer;
+        if (isCorrect) {
+            score++;
+            button.classList.add('correct');
+            const randomPhrase = positivePhrases[Math.floor(Math.random() * positivePhrases.length)];
+            feedbackText.innerHTML = `✅ ¡Correcto! ${randomPhrase}`;
+            feedbackText.style.color = 'var(--correct-color)';
+        } else {
+            button.classList.add('incorrect');
+            const randomPhrase = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+            const lawLink = `<a href="https://www.google.com/search?q=${encodeURIComponent(currentQuizQuestions[currentQuestionIndex].ARTICULO)}" target="_blank">Consultar legislación</a>`;
+            feedbackText.innerHTML = `🧠 Incorrecto. ${randomPhrase} <br>La respuesta correcta es: <b>${correctAnswer}</b>. ${lawLink}`;
+            feedbackText.style.color = 'var(--incorrect-color)';
+            incorrectAnswers.push(currentQuizQuestions[currentQuestionIndex]);
+        }
+        
+        updatePersistenceData(currentQuizQuestions[currentQuestionIndex].ID);
+        nextQuestionBtn.classList.remove('hidden');
+    }
+
+    function showNextQuestion() {
         currentQuestionIndex++;
         displayQuestion();
-    }, 4500); // Increased timeout for reading the explanation
-}
-
-function showFeedbackPopup(isCorrect, card) {
-    if (isCorrect) {
-        feedbackText.innerHTML = '¡Correcto! 🎉';
-        feedbackPopup.style.backgroundColor = '#10b981';
-    } else {
-        feedbackText.innerHTML = `Incorrecto. 💪<br><strong class="font-normal">La respuesta correcta es:</strong><br><span class="font-normal text-base">${card.correctAnswer}</span><br><em class="text-sm font-normal text-gray-300">${card.explanation || ''}</em>`;
-        feedbackPopup.style.backgroundColor = '#ef4444';
     }
     
-    feedbackLink.href = card.legalReferenceLink;
-    feedbackLink.textContent = `Consultar ${card.legalReferenceText}`;
+    function showResults() {
+        quizScreen.style.display = 'none';
+        resultsScreen.style.display = 'block';
 
-    feedbackPopup.classList.add('show');
-    
-    setTimeout(() => {
-        feedbackPopup.classList.remove('show');
-    }, 4400); // Slightly less than the question timer
-}
+        const percentage = currentQuizQuestions.length > 0 ? (score / currentQuizQuestions.length) * 100 : 0;
+        scoreText.textContent = `Has acertado ${score} de ${currentQuizQuestions.length} preguntas (${percentage.toFixed(1)}%).`;
+        motivationalClosing.textContent = closingPhrases[Math.floor(Math.random() * closingPhrases.length)];
 
-function updateScoreDisplay() {
-    scoreDisplayEl.innerHTML = `✅ ${score.correct} <span class="mx-2">|</span> ❌ ${score.incorrect}`;
-}
+        if (incorrectAnswers.length > 0) {
+            reviewContainer.style.display = 'block';
+            reviewList.innerHTML = '';
+            incorrectAnswers.forEach(q => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p class="review-question">${q.PREGUNTA}</p>
+                    <p class="review-answer"><b>Respuesta correcta:</b> ${q.RESPUESTA} (${q.ARTICULO})</p>
+                `;
+                reviewList.appendChild(li);
+            });
+        } else {
+            reviewContainer.style.display = 'none';
+        }
+        
+        const usageCount = getFromStorage(storageKeys.usage);
+        usageTableBody.innerHTML = '';
+        const sortedUsage = Object.entries(usageCount).sort(([,a],[,b]) => b - a);
 
-function showResults() {
-    quizScreen.classList.add('hidden');
-    resultsScreen.classList.remove('hidden');
-
-    const total = currentQuiz.length;
-    const correct = score.correct;
-    const percentage = total > 0 ? ((correct / total) * 100).toFixed(0) : 0;
-
-    resultsSummaryEl.innerHTML = `Has acertado <span class="font-bold text-green-400">${correct}</span> de <span class="font-bold">${total}</span> preguntas. (${percentage}%)`;
-
-    reviewListEl.innerHTML = '';
-    if (incorrectAnswers.length > 0) {
-        reviewListEl.parentElement.style.display = 'block';
-        incorrectAnswers.forEach(card => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="font-semibold">${card.question}</span><br><span class="text-sm text-gray-400">Respuesta correcta: ${card.correctAnswer}</span>`;
-            reviewListEl.appendChild(li);
+        sortedUsage.forEach(([id, count]) => {
+            const question = flashcardsData.find(q => q.ID == id);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${id} (${question ? question.PREGUNTA.substring(0,40)+'...' : 'N/A'})</td>
+                <td>${count}</td>
+            `;
+            usageTableBody.appendChild(tr);
         });
-    } else {
-        reviewListEl.parentElement.style.display = 'none';
-        reviewListEl.innerHTML = '';
-        const p = document.createElement('p');
-        p.textContent = '¡Felicidades! No has cometido ningún error. 🎉';
-        reviewListEl.appendChild(p);
     }
 
-    if (percentage >= 80) {
-        finalMessageEl.textContent = finalMessages.good;
-    } else if (percentage >= 50) {
-        finalMessageEl.textContent = finalMessages.medium;
-    } else {
-        finalMessageEl.textContent = finalMessages.bad;
-    }
-}
+    function updatePersistenceData(questionID) {
+        const selectedTopic = topicSelect.value;
+        let seenQuestions = getFromStorage(storageKeys.seen);
+        if (!seenQuestions[selectedTopic]) {
+            seenQuestions[selectedTopic] = [];
+        }
+        if (!seenQuestions[selectedTopic].includes(questionID)) {
+            seenQuestions[selectedTopic].push(questionID);
+        }
+        saveToStorage(storageKeys.seen, seenQuestions);
 
-function restartGame() {
-    resultsScreen.classList.add('hidden');
-    setupScreen.classList.remove('hidden');
-    updateAvailableQuestions();
-}
-
-function updateAvailableQuestions() {
-    const selectedTopic = topicSelect.value;
-    const askedQuestions = getAskedQuestions();
-
-    const allCardsForTopic = flashcardsDB.filter(card => selectedTopic === 'todo' || card.topic === selectedTopic);
-    
-    let askedIndicesForTopic;
-    if (selectedTopic === 'todo') {
-        askedIndicesForTopic = new Set([...askedQuestions.administrativo, ...askedQuestions.civil, ...askedQuestions.mercantil]);
-    } else {
-        askedIndicesForTopic = new Set(askedQuestions[selectedTopic] || []);
+        let usageCount = getFromStorage(storageKeys.usage);
+        usageCount[questionID] = (usageCount[questionID] || 0) + 1;
+        saveToStorage(storageKeys.usage, usageCount);
     }
     
-    const unaskedCount = allCardsForTopic.filter((card, index) => {
-        // Find the original index of the card to check against asked list
-        const originalIndex = flashcardsDB.findIndex(dbCard => dbCard.question === card.question);
-        return !askedIndicesForTopic.has(originalIndex);
-    }).length;
+    function generateIncorrectOptions(correctQuestion) {
+        const { RESPUESTA, ARTICULO, BLOQUE } = correctQuestion;
+        let distractors = new Set();
+        const baseAnswer = `${RESPUESTA} (${ARTICULO})`;
 
-    if(unaskedCount > 0){
-        availableQuestionsInfoEl.textContent = `(${unaskedCount} nuevas disponibles)`;
-        numQuestionsEl.max = unaskedCount;
-    } else {
-        availableQuestionsInfoEl.textContent = `(Ciclo completado. ¡Repasando!)`;
-        numQuestionsEl.max = allCardsForTopic.length;
+        const numericMatches = baseAnswer.match(/\d+/g);
+        if (numericMatches) {
+            for (const numStr of numericMatches) {
+                const num = parseInt(numStr);
+                if (num > 2000) {
+                    distractors.add(baseAnswer.replace(numStr, num - 1));
+                    distractors.add(baseAnswer.replace(numStr, num + 1));
+                } else if (num > 5) {
+                    distractors.add(baseAnswer.replace(numStr, num + 1));
+                    distractors.add(baseAnswer.replace(numStr, num - 2));
+                } else {
+                    distractors.add(baseAnswer.replace(numStr, num + 1));
+                    if (num > 1) distractors.add(baseAnswer.replace(numStr, num - 1));
+                }
+                if (distractors.size >= 3) break;
+            }
+        }
+
+        const keywordSwaps = {
+            "meses": "semanas", "mes": "semana", "años": "meses", "año": "mes",
+            "vendedor": "comprador", "comprador": "vendedor",
+            "potestativo": "obligatorio", "objetiva": "subjetiva",
+            "alzada": "reposición", "reposición": "alzada"
+        };
+        for (const key in keywordSwaps) {
+            if (baseAnswer.includes(key)) distractors.add(baseAnswer.replace(key, keywordSwaps[key]));
+            if (distractors.size >= 3) break;
+        }
+
+        if (distractors.size < 3) {
+            const otherQuestions = shuffleArray(flashcardsData.filter(q => q.BLOQUE === BLOQUE && q.ID !== correctQuestion.ID));
+            for (const otherQ of otherQuestions) {
+                distractors.add(`${otherQ.RESPUESTA} (${otherQ.ARTICULO})`);
+                if (distractors.size >= 3) break;
+            }
+        }
+        
+        if (distractors.size < 3) {
+            distractors.add("Todas las anteriores son correctas.");
+            distractors.add("Ninguna de las anteriores es correcta.");
+        }
+
+        distractors.delete(baseAnswer);
+        return Array.from(distractors).slice(0, 3);
     }
-}
+    
+    function shuffleArray(array) {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        }
+        return newArray;
+    }
 
-// Event Listeners
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', restartGame);
-topicSelect.addEventListener('change', updateAvailableQuestions);
+    /**
+     * Genera y descarga un informe CSV con el recuento de uso de cada pregunta.
+     * Esta función cumple con el requisito de generar un "fichero .csv" de manera
+     * compatible con un navegador web.
+     */
+    function downloadUsageReport() {
+        const usageCount = getFromStorage(storageKeys.usage);
+        if (Object.keys(usageCount).length === 0) {
+            alert("Aún no hay datos de uso para descargar.");
+            return;
+        }
 
-// Initial setup
-document.addEventListener('DOMContentLoaded', updateAvailableQuestions);
+        // Usar punto y coma como separador para mejor compatibilidad con Excel en configuraciones regionales españolas
+        let csvContent = "ID;Pregunta;Veces Formulada\r\n"; 
 
-</script>
+        const sortedUsage = Object.entries(usageCount).sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+
+        for (const [id, count] of sortedUsage) {
+            const questionData = flashcardsData.find(q => q.ID == id);
+            if (questionData) {
+                // Para evitar problemas con comas o puntos y comas en la pregunta, la encerramos entre comillas
+                const questionText = `"${questionData.PREGUNTA.replace(/"/g, '""')}"`;
+                csvContent += `${id};${questionText};${count}\r\n`;
+            }
+        }
+
+        // Crear un objeto Blob para el contenido CSV
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Crear un enlace temporal para iniciar la descarga
+        const link = document.createElement("a");
+        if (link.download !== undefined) { // Feature detection
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "informe_uso_flashcards.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    </script>
 </body>
 </html>
